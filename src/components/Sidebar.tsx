@@ -15,7 +15,6 @@ interface SidebarItemProps {
 const SidebarItem: React.FC<SidebarItemProps> = ({
     icon: Icon,
     label,
-    path,
     isActive,
     isCollapsed,
     onClick

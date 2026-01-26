@@ -13,7 +13,6 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({
     icon: Icon,
     label,
-    path,
     isActive,
     onClick
 }) => {
