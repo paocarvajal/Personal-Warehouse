@@ -39,7 +39,7 @@ function App() {
   return (
     <AuthProvider>
       <InventoryProvider>
-        <Router>
+        <Router basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/login" element={<Login />} />
 
