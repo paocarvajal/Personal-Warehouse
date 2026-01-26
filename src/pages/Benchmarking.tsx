@@ -21,6 +21,7 @@ export const Benchmarking = () => {
     const [inputType, setInputType] = useState<'url' | 'file'>('url');
     const [status, setStatus] = useState<'idle' | 'uploading' | 'saving'>('idle');
     const [imgError, setImgError] = useState(false);
+    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Add Option Form State (Managed separately for better control)
@@ -535,8 +536,29 @@ export const Benchmarking = () => {
                                             onClick={() => { setSelectedId(bm.id); setImgError(false); }}
                                             className="group bg-[#242938] rounded-2xl overflow-hidden border border-gray-700 hover:border-purple-500/50 transition-all cursor-pointer hover:shadow-2xl hover:-translate-y-2 relative"
                                         >
+
+                                            {/* Edit Pencil Icon (Top Left) */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedId(bm.id);
+                                                    setImgError(false);
+                                                }}
+                                                className="absolute top-2 left-2 z-20 bg-black/60 text-white p-1.5 rounded-full backdrop-blur-sm hover:bg-purple-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                            </button>
+
                                             {/* Image Area */}
-                                            <div className="aspect-video bg-[#1A1D29] relative overflow-hidden">
+                                            <div
+                                                className="aspect-video bg-[#1A1D29] relative overflow-hidden"
+                                                onClick={(e) => {
+                                                    if (bm.imageUrl) {
+                                                        e.stopPropagation();
+                                                        setZoomedImage(bm.imageUrl);
+                                                    }
+                                                }}
+                                            >
                                                 {bm.imageUrl ? (
                                                     <img
                                                         src={bm.imageUrl}
@@ -549,14 +571,16 @@ export const Benchmarking = () => {
                                                     </div>
                                                 )}
 
-                                                {/* Hover Overlay */}
-                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                                    <span className="bg-white text-black font-bold px-5 py-2.5 rounded-full text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform shadow-lg flex items-center gap-2">
-                                                        Ver Detalles <ArrowRight size={16} />
-                                                    </span>
-                                                </div>
+                                                {/* Hover Overlay - ONLY if no image, or smaller since image is clickable now */}
+                                                {!bm.imageUrl && (
+                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                        <span className="bg-white text-black font-bold px-5 py-2.5 rounded-full text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform shadow-lg flex items-center gap-2">
+                                                            Ver Detalles <ArrowRight size={16} />
+                                                        </span>
+                                                    </div>
+                                                )}
 
-                                                <div className="absolute top-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-bold text-white z-10 border border-white/10">
+                                                <div className="absolute top-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-bold text-white z-10 border border-white/10 pointer-events-none">
                                                     {bm.options.length} OPCIONES
                                                 </div>
                                             </div>
@@ -580,6 +604,27 @@ export const Benchmarking = () => {
                     )
                 )}
             </div>
+
+            {/* ZOOM MODAL */}
+            {zoomedImage && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-md animate-in fade-in duration-200"
+                    onClick={() => setZoomedImage(null)}
+                >
+                    <img
+                        src={zoomedImage}
+                        alt="Zoomed"
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    <button
+                        onClick={() => setZoomedImage(null)}
+                        className="absolute top-4 right-4 text-white/70 hover:text-white p-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
