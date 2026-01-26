@@ -7,6 +7,7 @@ import { AlertTriangle, Package, Search, ChevronLeft, QrCode } from 'lucide-reac
 export const Scan = () => {
     const navigate = useNavigate();
     const { boxes } = useInventory();
+    const [permissionError, setPermissionError] = useState(false);
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [manualCode, setManualCode] = useState('');
 
@@ -32,26 +33,16 @@ export const Scan = () => {
             scanner.clear();
             handleScanSuccess(decodedText);
         }, (errorMessage) => {
-            // This callback is called for scanning errors (e.g. alignment), but also startup errors.
-            // Check if it's a permission/secure context issue
             if (errorMessage?.includes("NotAllowedError") || errorMessage?.includes("Permission")) {
-                console.error("Camera permission denied:", errorMessage);
-                // We could show a UI error here, but standard behavior usually logs it.
-                // Ideally we'd set a state to show a "Camera Unavailable" message.
+                setPermissionError(true);
             }
         });
-
-        // Handle specific startup failures if possible, or just rely on the UI to show blank
-        // Unfortuantely html5-qrcode's scanner.render doesn't return a promise. 
-        // We'll rely on the manual input fallback if it fails.
 
         return () => {
             scanner.clear().catch(err => console.error("Failed to clear scanner", err));
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-
 
     const handleManualSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,24 +54,32 @@ export const Scan = () => {
     return (
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             {/* Header */}
-            <div className="page-header">
-                <div>
-                    <button onClick={() => navigate(-1)} className="btn-ghost" style={{ paddingLeft: 0, marginBottom: '8px' }}>
-                        <ChevronLeft size={20} /> Volver
-                    </button>
-                    <div className="page-title-group">
-                        <div className="greeting">Escáner</div>
-                        <h1>Lectura de Etiqueta</h1>
-                    </div>
-                </div>
-            </div>
+            {/* ... */}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 {/* Scanner Card */}
-                <div className="balance-card" style={{ padding: 0, overflow: 'hidden', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', border: '2px solid var(--accent-teal)' }}>
+                <div className="balance-card" style={{ padding: 0, overflow: 'hidden', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', border: '2px solid var(--accent-teal)', position: 'relative' }}>
+                    {permissionError && (
+                        <div style={{ position: 'absolute', inset: 0, background: '#242938', zIndex: 10, padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                            <AlertTriangle size={48} className="text-red-500 mb-4" />
+                            <h3 className="text-xl font-bold text-white mb-2">Acceso a Cámara Denegado</h3>
+                            <p className="text-gray-400 mb-6">
+                                El navegador bloqueó el uso de la cámara.
+                            </p>
+                            <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl text-yellow-200 text-sm text-left">
+                                <p className="font-bold mb-1">💡 ¿Estás probando en un celular?</p>
+                                <p>
+                                    Por seguridad, los navegadores <strong>bloquean la cámara</strong> si la página no es segura (HTTPS).
+                                    Como estás usando <code>localhost</code> (HTTP), esto fallará en tu celular.
+                                </p>
+                                <p className="mt-2 text-white font-bold">Solución: Despliega la app a GitHub Pages.</p>
+                            </div>
+                        </div>
+                    )}
                     {!scanResult ? (
                         <div id="reader" style={{ width: '100%', height: '100%' }}></div>
                     ) : (
+                        // ... (Success view)
                         <div style={{ padding: '32px', textAlign: 'center', width: '100%', height: '100%', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
                             <div className="icon-circle purple">
                                 <Package size={32} />
@@ -98,8 +97,8 @@ export const Scan = () => {
                             </div>
 
                             <div style={{ display: 'grid', gap: '12px', width: '100%' }}>
-                                <button onClick={() => navigate(`/add?boxId=${scanResult}`)} className="btn btn-primary" style={{ width: '100%' }}>
-                                    Crear Caja con este QR
+                                <button onClick={() => navigate('/boxes')} className="btn btn-primary" style={{ width: '100%' }}>
+                                    Ir a Gestión de Cajas
                                 </button>
                                 <button onClick={() => window.location.reload()} className="btn btn-ghost" style={{ width: '100%' }}>
                                     Escanear Otro

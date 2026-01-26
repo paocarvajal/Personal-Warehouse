@@ -10,6 +10,7 @@ import { EditItem } from './pages/EditItem';
 import ProductDetail from './pages/ProductDetail';
 import { BoxList } from './pages/BoxList';
 import { BoxDetails } from './pages/BoxDetails';
+import { PrintLabels } from './pages/PrintLabels';
 import { Scan } from './pages/Scan';
 import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
@@ -56,6 +57,7 @@ function App() {
               <Route path="product/:id" element={<ProductDetail />} />
               <Route path="boxes" element={<BoxList />} />
               <Route path="boxes/:id" element={<BoxDetails />} />
+              <Route path="print-labels" element={<PrintLabels />} />
               <Route path="scan" element={<Scan />} />
             </Route>
           </Routes>

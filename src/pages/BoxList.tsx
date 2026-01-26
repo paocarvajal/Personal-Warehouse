@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
-import { Box as BoxIcon, Plus, MapPin } from 'lucide-react';
+import { Box as BoxIcon, Plus, MapPin, Printer } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const BoxList = () => {
     const { boxes, addBox, deleteBox } = useInventory();
+    const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
     const [newBoxData, setNewBoxData] = useState({ name: '', location: '', description: '' });
+    const [selectedBoxIds, setSelectedBoxIds] = useState<string[]>([]);
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
         addBox(newBoxData);
         setIsCreating(false);
         setNewBoxData({ name: '', location: '', description: '' });
+    };
+
+    const toggleSelection = (id: string) => {
+        setSelectedBoxIds(prev =>
+            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkPrint = () => {
+        navigate('/print-labels', { state: { boxIds: selectedBoxIds } });
     };
 
     return (
@@ -88,6 +100,30 @@ export const BoxList = () => {
                 </div>
             )}
 
+            {/* Selection Toolbar */}
+            {selectedBoxIds.length > 0 && (
+                <div className="mb-6 bg-purple-600/10 border border-purple-500/20 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-3">
+                        <span className="font-bold text-purple-200">
+                            {selectedBoxIds.length} Cajas Seleccionadas
+                        </span>
+                        <button
+                            onClick={() => setSelectedBoxIds([])}
+                            className="text-sm text-purple-400 hover:text-white underline"
+                        >
+                            Limpiar
+                        </button>
+                    </div>
+                    <button
+                        onClick={handleBulkPrint}
+                        className="btn bg-purple-500 text-white font-bold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 hover:bg-purple-400"
+                    >
+                        <Printer size={18} />
+                        Imprimir {selectedBoxIds.length} Etiquetas
+                    </button>
+                </div>
+            )}
+
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
                 {boxes.length === 0 && !isCreating ? (
@@ -106,8 +142,23 @@ export const BoxList = () => {
                     </div>
                 ) : (
                     boxes.map(box => (
-                        <div key={box.id} className="group bg-[#242938] border border-gray-700 hover:border-purple-500/50 rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col h-full relative overflow-hidden">
-                            <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div
+                            key={box.id}
+                            className={`group bg-[#242938] border rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col h-full relative overflow-hidden ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
+                        >
+                            {/* Selection Checkbox */}
+                            <div className="absolute top-4 left-4 z-20">
+                                <label className="custom-checkbox flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded border-gray-600 bg-[#1A1D29] text-purple-500 focus:ring-purple-500"
+                                        checked={selectedBoxIds.includes(box.id)}
+                                        onChange={() => toggleSelection(box.id)}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="flex justify-between items-start mb-4 relative z-10 pl-8">
                                 <div className="min-w-0 pr-2">
                                     <h3 className="font-bold text-white text-xl truncate group-hover:text-purple-400 transition-colors">{box.name}</h3>
                                     <p className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">

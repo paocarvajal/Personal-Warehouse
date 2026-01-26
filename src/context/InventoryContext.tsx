@@ -168,29 +168,26 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const addBox = async (boxData: Omit<Box, 'id' | 'createdAt' | 'qrCode'>) => {
         try {
-            // We let Firestore generate the ID, then we update the document to include it
-            // in the QR code if we want the format "BOX:ID". 
-            // Or easier: Create a ref first to get ID.
+            // Create a reference with an auto-generated ID
             const newBoxRef = doc(collection(db, 'boxes'));
             const boxId = newBoxRef.id;
 
-            await transportBoxData(newBoxRef, boxData, boxId);
+            // Define the box object
+            const newBox: Omit<Box, 'id'> = {
+                ...boxData,
+                qrCode: boxId, // Storing just the ID as the QR code for simplicity, or keep 'BOX:${boxId}' if preferred
+                createdAt: Date.now(),
+            };
 
+            // Save to Firestore
+            await setDoc(newBoxRef, newBox);
         } catch (e) {
             console.error("Error adding box: ", e);
             throw e;
         }
     };
 
-    // Helper to separate the set logic slightly for clarity
-    const transportBoxData = async (ref: any, data: any, id: string) => {
-        const newBox: Omit<Box, 'id'> = {
-            ...data,
-            qrCode: `BOX:${id}`,
-            createdAt: Date.now(),
-        };
-        await setDoc(ref, newBox);
-    }
+
 
 
     const deleteBox = async (id: string) => {

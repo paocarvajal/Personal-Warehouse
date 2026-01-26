@@ -22,6 +22,71 @@ export const BoxDetails = () => {
         setSelectedItemId('');
     };
 
+    const handlePrint = () => {
+        if (!box) return;
+        const canvas = document.querySelector('#qr-code-container canvas') as HTMLCanvasElement;
+        if (!canvas) return;
+        const pngUrl = canvas.toDataURL("image/png");
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Etiqueta ${box.name}</title>
+                    <style>
+                        body {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            font-family: sans-serif;
+                        }
+                        .qr-container {
+                            border: 2px solid black;
+                            padding: 20px;
+                            text-align: center;
+                            border-radius: 10px;
+                        }
+                        img {
+                            width: 200px;
+                            height: 200px;
+                            display: block;
+                            margin: 0 auto 10px;
+                        }
+                        h2 {
+                            margin: 0;
+                            font-size: 24px;
+                            font-weight: bold;
+                        }
+                        p {
+                            margin: 5px 0 0;
+                            font-size: 14px;
+                            color: #555;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="qr-container">
+                        <img src="${pngUrl}" />
+                        <h2>${box.name}</h2>
+                        <p>${box.location}</p>
+                    </div>
+                    <script>
+                        window.onload = () => {
+                            window.print();
+                            // window.close(); // Optional: keep open for debug or auto-close
+                        }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
     if (!box) {
         return (
             <div className="text-center py-12">
@@ -53,10 +118,13 @@ export const BoxDetails = () => {
                     </p>
                 </div>
                 <div className="flex flex-col items-center gap-3 relative z-10">
-                    <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm transform hover:scale-105 transition-transform">
+                    <div id="qr-code-container" className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm transform hover:scale-105 transition-transform">
                         <QRCodeCanvas value={box.qrCode} size={100} />
                     </div>
-                    <button className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition-colors font-medium">
+                    <button
+                        onClick={handlePrint}
+                        className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition-colors font-medium"
+                    >
                         <Printer size={14} /> Imprimir Etiqueta
                     </button>
                 </div>

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import type { Category } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Camera, Save, ChevronLeft, Loader2 } from 'lucide-react';
 import { storage } from '../firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -13,6 +13,7 @@ const CATEGORIES: Category[] = [
 export const AddItem = () => {
     const { addItem, boxes } = useInventory();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ export const AddItem = () => {
         quantity: 1,
         category: '' as Category,
         description: '',
-        boxId: '',
+        boxId: searchParams.get('boxId') || '',
         tags: '',
     });
 
