@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Finanzas Casa Toh - Estilo Minimalista Suave</title>
+    <style>
+        /* ============================================ */
+        /* RESET Y CONFIGURACIÓN BASE */
+        /* ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', sans-serif;
+            background: #1A1D29;
+            color: #E8E9ED;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================ */
+        /* PALETA DE COLORES - ESTILO MINIMALISTA SUAVE */
+        /* ============================================ */
+        :root {
+            /* Fondos */
+            --bg-primary: #1A1D29;
+            --bg-secondary: #242938;
+            --bg-tertiary: #2d3241;
+
+            /* Acentos */
+            --accent-purple: #6C63FF;
+            --accent-purple-light: rgba(108, 99, 255, 0.15);
+            --accent-teal: #4ECDC4;
+            --accent-teal-light: rgba(78, 205, 196, 0.12);
+
+            /* Alertas */
+            --color-success: #4ECDC4;
+            --color-success-bg: rgba(78, 205, 196, 0.12);
+            --color-error: #FF6B6B;
+            --color-error-bg: rgba(255, 107, 107, 0.12);
+
+            /* Textos */
+            --text-primary: #E8E9ED;
+            --text-secondary: #9BA3B4;
+
+            /* Sombras */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 8px 20px rgba(108, 99, 255, 0.15);
+
+            /* Espaciado */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Bordes redondeados */
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+        }
+
+        /* ============================================ */
+        /* CONTENEDOR PRINCIPAL RESPONSIVO */
+        /* ============================================ */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+            min-height: 100vh;
+        }
+
+        /* MÓVIL: Una columna */
+        @media (max-width: 767px) {
+            .app-container {
+                padding: var(--spacing-md);
+            }
+        }
+
+        /* ============================================ */
+        /* HEADER */
+        /* ============================================ */
+        .header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .greeting {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 400;
+        }
+
+        .username {
+            font-size: 30px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 767px) {
+            .username {
+                font-size: 26px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .username {
+                font-size: 36px;
+            }
+        }
+
+        /* ============================================ */
+        /* TARJETA DE BALANCE */
+        /* ============================================ */
+        .balance-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .balance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        .balance-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .balance-amount {
+            font-size: 44px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            letter-spacing: -1px;
+        }
+
+        .balance-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-teal-light);
+            color: var(--accent-teal);
+            padding: 8px var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Responsivo */
+        @media (max-width: 767px) {
+            .balance-card {
+                padding: var(--spacing-lg);
+            }
+
+            .balance-amount {
+                font-size: 36px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .balance-amount {
+                font-size: 52px;
+            }
+        }
+
+        /* ============================================ */
+        /* ACCIONES RÁPIDAS */
+        /* ============================================ */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* MÓVIL: 2 columnas */
+        @media (max-width: 479px) {
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* TABLET: 4 columnas */
+        @media (min-width: 480px) and (max-width: 1023px) {
+            .quick-actions {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* DESKTOP: 4-6 columnas */
+        @media (min-width: 1024px) {
+            .quick-actions {
+                grid-template-columns: repeat(6, 1fr);
+                max-width: 800px;
+            }
+        }
+
+        .action-btn {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .action-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .action-btn:hover .action-icon {
+            transform: scale(1.1);
+        }
+
+        .action-icon.purple {
+            background: var(--accent-purple-light);
+            color: var(--accent-purple);
+        }
+
+        .action-icon.teal {
+            background: var(--accent-teal-light);
+            color: var(--accent-teal);
+        }
+
+        .action-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ============================================ */
+        /* SECCIÓN DE TRANSACCIONES */
+        /* ============================================ */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .see-all {
+            font-size: 13px;
+            color: var(--accent-purple);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .see-all:hover {
+            color: var(--accent-teal);
+            text-decoration: underline;
+        }
+
+        /* Responsivo */
+        @media (min-width: 768px) {
+            .section-title {
+                font-size: 22px;
+            }
+        }
+
+        /* ============================================ */
+        /* LISTA DE TRANSACCIONES */
+        /* ============================================ */
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .transaction-item {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .transaction-item:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .transaction-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            flex: 1;
+            min-width: 0; /* Para permitir text-overflow */
+        }
+
+        .transaction-icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .transaction-icon.expense {
+            background: var(--color-error-bg);
+            color: var(--color-error);
+        }
+
+        .transaction-icon.income {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+        }
+
+        .transaction-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .transaction-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .transaction-category {
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .transaction-amount {
+            font-size: 17px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-left: var(--spacing-sm);
+        }
+
+        .transaction-amount.negative {
+            color: var(--color-error);
+        }
+
+        .transaction-amount.positive {
+            color: var(--color-success);
+        }
+
+        /* Responsivo */
+        @media (max-width: 479px) {
+            .transaction-item {
+                padding: var(--spacing-md);
+            }
+
+            .transaction-icon {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                font-size: 20px;
+            }
+
+            .transaction-amount {
+                font-size: 15px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .transaction-name {
+                font-size: 16px;
+            }
+
+            .transaction-amount {
+                font-size: 18px;
+            }
+        }
+
+        /* ============================================ */
+        /* LAYOUT RESPONSIVO PRINCIPAL */
+        /* ============================================ */
+
+        /* MÓVIL: Diseño de una columna */
+        @media (max-width: 767px) {
+            .main-content {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        /* TABLET Y DESKTOP: Diseño de dos columnas para dashboard */
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: var(--spacing-lg);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 2fr 1fr;
+                gap: var(--spacing-xl);
+            }
+
+            .main-column {
+                /* Columna principal para transacciones */
+            }
+
+            .sidebar-column {
+                /* Columna lateral para gráficas/resúmenes */
+            }
+        }
+
+        /* ============================================ */
+        /* NAVEGACIÓN INFERIOR (MÓVIL) */
+        /* ============================================ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 20px 20px;
+            z-index: 1000;
+        }
+
+        /* Ocultar en desktop */
+        @media (min-width: 1024px) {
+            .bottom-nav {
+                display: none;
+            }
+        }
+
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 100px;
+        }
+
+        .nav-item.active {
+            background: var(--accent-purple-light);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+        }
+
+        .nav-item.active .nav-icon {
+            color: var(--accent-purple);
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--accent-purple);
+        }
+
+        /* Agregar padding al contenido para compensar nav fijo en móvil */
+        @media (max-width: 1023px) {
+            .app-container {
+                padding-bottom: 100px;
+            }
+        }
+
+        /* ============================================ */
+        /* SIDEBAR PARA DESKTOP */
+        /* ============================================ */
+        .sidebar {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: var(--bg-secondary);
+            padding: var(--spacing-xl);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar {
+                display: block;
+            }
+
+            .app-container {
+                margin-left: 280px;
+            }
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: 12px var(--spacing-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .sidebar-item.active {
+            background: var(--accent-purple-light);
+            color: var(--accent-purple);
+        }
+
+        .sidebar-item-icon {
+            font-size: 20px;
+        }
+
+        .sidebar-item-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* ============================================ */
+        /* UTILIDADES */
+        /* ============================================ */
+        .hide-mobile {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .hide-mobile {
+                display: block;
+            }
+        }
+
+        .hide-desktop {
+            display: block;
+        }
+
+        @media (min-width: 1024px) {
+            .hide-desktop {
+                display: none;
+            }
+        }
+
+        /* Scroll suave */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Mejor tap en móvil */
+        button, .action-btn, .nav-item, .transaction-item {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR (Solo Desktop) -->
+    <aside class="sidebar">
+        <div class="header" style="margin-bottom: 40px;">
+            <div class="username">Casa Toh</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-item active">
+                <span class="sidebar-item-icon">🏠</span>
+                <span class="sidebar-item-label">Inicio</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="sidebar-item-icon">📊</span>
+                <span class="sidebar-item-label">Estadísticas</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="sidebar-item-icon">💳</span>
+                <span class="sidebar-item-label">Transacciones</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="sidebar-item-icon">🔔</span>
+                <span class="sidebar-item-label">Alertas</span>
+            </a>
+            <a href="#" class="sidebar-item">
+                <span class="sidebar-item-icon">⚙️</span>
+                <span class="sidebar-item-label">Configuración</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="greeting">Bienvenida de nuevo</div>
+            <div class="username">Pao</div>
+        </header>
+
+        <!-- TARJETA DE BALANCE -->
+        <div class="balance-card">
+            <div class="balance-label">Balance Total</div>
+            <div class="balance-amount">$124,580</div>
+            <span class="balance-change">
+                <span>↗</span>
+                <span>+12.5% este mes</span>
+            </span>
+        </div>
+
+        <!-- ACCIONES RÁPIDAS -->
+        <div class="quick-actions">
+            <button class="action-btn">
+                <div class="action-icon purple">💳</div>
+                <div class="action-label">Enviar</div>
+            </button>
+            <button class="action-btn">
+                <div class="action-icon teal">📊</div>
+                <div class="action-label">Análisis</div>
+            </button>
+            <button class="action-btn">
+                <div class="action-icon purple">💰</div>
+                <div class="action-label">Ingresos</div>
+            </button>
+            <button class="action-btn">
+                <div class="action-icon teal">⚙️</div>
+                <div class="action-label">Más</div>
+            </button>
+            <button class="action-btn hide-mobile">
+                <div class="action-icon purple">📈</div>
+                <div class="action-label">Reportes</div>
+            </button>
+            <button class="action-btn hide-mobile">
+                <div class="action-icon teal">👥</div>
+                <div class="action-label">Socios</div>
+            </button>
+        </div>
+
+        <!-- SECCIÓN DE TRANSACCIONES -->
+        <div class="section-header">
+            <h2 class="section-title">Transacciones Recientes</h2>
+            <a href="#" class="see-all">Ver todo</a>
+        </div>
+
+        <!-- LISTA DE TRANSACCIONES -->
+        <div class="transactions-list">
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon income">🏠</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Reserva Airbnb</div>
+                        <div class="transaction-category">Casa Toh - Enero 2026</div>
+                    </div>
+                </div>
+                <div class="transaction-amount positive">+$8,500</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon expense">⚡</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">CFE</div>
+                        <div class="transaction-category">Servicios - Electricidad</div>
+                    </div>
+                </div>
+                <div class="transaction-amount negative">-$1,240</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon income">🏠</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Reserva Airbnb</div>
+                        <div class="transaction-category">Casa Toh - Diciembre 2025</div>
+                    </div>
+                </div>
+                <div class="transaction-amount positive">+$12,300</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon expense">🛠️</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Mantenimiento</div>
+                        <div class="transaction-category">Reparaciones - Plomería</div>
+                    </div>
+                </div>
+                <div class="transaction-amount negative">-$3,850</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon expense">💧</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Agua</div>
+                        <div class="transaction-category">Servicios - SOAPAP</div>
+                    </div>
+                </div>
+                <div class="transaction-amount negative">-$680</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon income">🏠</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Reserva Airbnb</div>
+                        <div class="transaction-category">Casa Toh - Noviembre 2025</div>
+                    </div>
+                </div>
+                <div class="transaction-amount positive">+$9,800</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon expense">🧹</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Limpieza</div>
+                        <div class="transaction-category">Servicios - Housekeeping</div>
+                    </div>
+                </div>
+                <div class="transaction-amount negative">-$1,500</div>
+            </div>
+
+            <div class="transaction-item">
+                <div class="transaction-left">
+                    <div class="transaction-icon expense">🌐</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Internet</div>
+                        <div class="transaction-category">Servicios - Telmex</div>
+                    </div>
+                </div>
+                <div class="transaction-amount negative">-$599</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGACIÓN INFERIOR (Solo Móvil y Tablet) -->
+    <nav class="bottom-nav">
+        <div class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Inicio</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">Stats</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🔔</div>
+            <div class="nav-label">Alertas</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Perfil</div>
+        </div>
+    </nav>
+
+    <script>
+        // Interactividad básica para demo
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                console.log('Acción clickeada:', this.querySelector('.action-label').textContent);
+            });
+        });
+
+        document.querySelectorAll('.transaction-item').forEach(item => {
+            item.addEventListener('click', function() {
+                console.log('Transacción seleccionada:', this.querySelector('.transaction-name').textContent);
+            });
+        });
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

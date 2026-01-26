@@ -1,0 +1,212 @@
+/* TAILWIND CSS V4 - CONFIGURACIÓN ESTILO MINIMALISTA SUAVE (WAREHOUSE) */
+@import "tailwindcss";
+
+/* ============================================ */
+/* VARIABLES CSS */
+/* ============================================ */
+:root {
+  /* Fondos */
+  --bg-primary: #1A1D29;
+  --bg-secondary: #242938;
+  --bg-tertiary: #2d3241;
+
+  /* Acentos */
+  --accent-purple: #6C63FF;
+  --accent-purple-light: rgba(108, 99, 255, 0.15);
+  --accent-teal: #4ECDC4;
+  --accent-teal-light: rgba(78, 205, 196, 0.12);
+
+  /* Alertas */
+  --color-success: #4ECDC4;
+  --color-success-bg: rgba(78, 205, 196, 0.12);
+  --color-error: #FF6B6B;
+  --color-error-bg: rgba(255, 107, 107, 0.12);
+
+  /* Textos */
+  --text-primary: #E8E9ED;
+  --text-secondary: #9BA3B4;
+
+  /* Sombras */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 8px 20px rgba(108, 99, 255, 0.15);
+
+  /* Espaciado */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Bordes */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+}
+
+/* ============================================ */
+/* BASE STYLES */
+/* ============================================ */
+body {
+  @apply bg-[var(--bg-primary)] text-[var(--text-primary)];
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================ */
+/* UTILITY CLASSES */
+/* ============================================ */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-accent-purple {
+  color: var(--accent-purple);
+}
+
+.text-accent-teal {
+  color: var(--accent-teal);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+/* ============================================ */
+/* COMPONENTS */
+/* ============================================ */
+
+/* Balance/Stats Card */
+.stats-card {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  @apply transition-all duration-300 ease-in-out p-6 md:p-8;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* Action Button */
+.action-btn {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  @apply transition-all duration-300 ease-in-out flex flex-col items-center justify-center p-5 text-center cursor-pointer;
+}
+
+.action-btn:hover {
+  background-color: var(--bg-tertiary);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* List Item */
+.list-item {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  @apply transition-all duration-200 ease-in-out cursor-pointer p-4 flex items-center justify-between;
+}
+
+.list-item:hover {
+  background-color: var(--bg-tertiary);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Nav Item */
+.nav-item {
+  border-radius: var(--radius-md);
+  @apply transition-all duration-200;
+}
+
+.nav-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.nav-item.active {
+  background-color: var(--accent-purple-light);
+  color: var(--accent-purple);
+}
+
+/* Sidebar Item */
+.sidebar-item {
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background-color: transparent;
+  @apply flex items-center gap-4 px-4 py-3 transition-all duration-200 cursor-pointer w-full;
+}
+
+.sidebar-item:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.sidebar-item.active {
+  background-color: var(--accent-purple-light);
+  color: var(--accent-purple);
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(26, 29, 41, 0.6);
+  @apply rounded-xl p-3 text-white transition-all duration-200 outline-none w-full;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+  background-color: rgba(26, 29, 41, 0.9);
+}
+
+/* Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Truncate */
+.truncate-text {
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
+/* Hide/Show */
+.hide-mobile {
+  @apply hidden md:block;
+}
+
+.hide-desktop {
+  @apply block lg:hidden;
+}
