@@ -36,14 +36,22 @@ export const BoxList = () => {
                     <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Gestión de Cajas</h1>
                     <p className="text-gray-400 mt-1">{boxes.length} Contenedores registrados</p>
                 </div>
-                {!isCreating && (
+                <div className="flex gap-3">
                     <button
-                        onClick={() => setIsCreating(true)}
-                        className="btn btn-primary px-6 py-3 rounded-xl font-bold custom-shadow hover:scale-105 transition-transform flex items-center gap-2"
+                        onClick={() => navigate('/import')}
+                        className="btn bg-[#242938] border border-gray-700 hover:bg-gray-800 text-gray-300 font-bold px-4 py-3 rounded-xl flex items-center gap-2 transition-all"
                     >
-                        <Plus size={20} /> Nueva Caja
+                        Importar Excel
                     </button>
-                )}
+                    {!isCreating && (
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            className="btn btn-primary px-6 py-3 rounded-xl font-bold custom-shadow hover:scale-105 transition-transform flex items-center gap-2"
+                        >
+                            <Plus size={20} /> Nueva Caja
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Create Form */}

@@ -94,6 +94,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
             // Explicitly map fields to avoid undefined values. Use null for optional fields.
             const docData = {
                 name: itemData.name,
+                sku: itemData.sku || null,
                 quantity: itemData.quantity,
                 category: itemData.category,
                 description: itemData.description || '',

@@ -12,6 +12,7 @@ import { BoxList } from './pages/BoxList';
 import { BoxDetails } from './pages/BoxDetails';
 import { PrintLabels } from './pages/PrintLabels';
 import { Scan } from './pages/Scan';
+import { BulkImport } from './pages/BulkImport';
 import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
 
@@ -59,6 +60,7 @@ function App() {
               <Route path="boxes/:id" element={<BoxDetails />} />
               <Route path="print-labels" element={<PrintLabels />} />
               <Route path="scan" element={<Scan />} />
+              <Route path="import" element={<BulkImport />} />
             </Route>
           </Routes>
         </Router>
