@@ -46,35 +46,43 @@ export const AddItem = () => {
         setUploading(true);
 
         try {
-            let finalImageUrl = imagePreview || undefined;
+            let finalImageUrl = undefined;
 
             if (imageFile) {
-                const storageRef = ref(storage, `items/${Date.now()}_${imageFile.name}`);
-
-                // Define the full upload task
-                const performUpload = async () => {
-                    const snapshot = await uploadBytes(storageRef, imageFile);
-                    return await getDownloadURL(snapshot.ref);
-                };
-
-                // Create a race between the full task and a 20s timeout
-                const timeoutPromise = new Promise<string>((_, reject) =>
-                    setTimeout(() => reject(new Error("Upload timeout")), 20000)
-                );
-
+                // User wants to upload an image
                 try {
+                    const storageRef = ref(storage, `items/${Date.now()}_${imageFile.name}`);
+
+                    // Create a race between the full task and a 30s timeout
+                    const timeoutPromise = new Promise<string>((_, reject) =>
+                        setTimeout(() => reject(new Error("Tiempo de espera agotado (30s)")), 30000)
+                    );
+
+                    const performUpload = async () => {
+                        const snapshot = await uploadBytes(storageRef, imageFile);
+                        return await getDownloadURL(snapshot.ref);
+                    };
+
                     finalImageUrl = await Promise.race([performUpload(), timeoutPromise]);
-                } catch (err) {
-                    console.warn("Image upload failed or timed out:", err);
+
+                } catch (err: any) {
+                    console.error("Upload error:", err);
+
+                    let errorMsg = "Error desconocido al subir imagen.";
+                    if (err.code === 'storage/unauthorized') errorMsg = "Permiso denegado en Storage.";
+                    if (err.message) errorMsg = err.message;
+
                     // Ask user how to proceed
-                    if (confirm("La imagen está tardando en subir o falló. ¿Quieres guardar el artículo SIN imagen? \n\nAceptar: Guardar sin imagen.\nCancelar: Seguir intentando subir.")) {
+                    if (confirm(`Falló la subida de imagen: ${errorMsg}\n\n¿Quieres guardar el artículo SIN imagen?`)) {
                         finalImageUrl = undefined;
                     } else {
-                        // User wants to keep trying (or just cancelled saving)
                         setUploading(false);
-                        return;
+                        return; // Cancel save
                     }
                 }
+            } else if (imagePreview && imagePreview.startsWith('http')) {
+                // If it's an existing URL (not base64), keep it (logic for future edit mode, unlikely here but safe)
+                finalImageUrl = imagePreview;
             }
 
             await addItem({
@@ -89,7 +97,7 @@ export const AddItem = () => {
             navigate('/');
         } catch (error) {
             console.error("Error saving item:", error);
-            alert("Error al guardar el item.");
+            alert("Error al guardar el item en la base de datos.");
         } finally {
             setUploading(false);
         }
