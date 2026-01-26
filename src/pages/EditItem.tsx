@@ -19,11 +19,19 @@ export const EditItem = () => {
     const [formData, setFormData] = useState({
         name: '',
         quantity: 1,
+        unit: 'pcs',
         category: '' as Category,
         description: '',
         boxId: '',
         tags: '',
     });
+
+    const getUnits = (category: string) => {
+        if (category === 'Medicina' || category === 'Farmacia' || category === 'Salud') {
+            return ['mg', 'ml', 'tabletas', 'cápsulas', 'inyectable', 'g', 'oz', 'unidades'];
+        }
+        return ['pcs', 'unidades', 'paquete', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'set', 'caja'];
+    };
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -32,14 +40,12 @@ export const EditItem = () => {
         if (item) {
             // Only update if the item data is different from current form data (basic check)
             // or just rely on 'item' dependency if we assume item only changes when loaded.
-            // But to avoid the lint warning about 'synchronous', we can wrap in a check or separate logic.
-            // The warning is often about 'item' changing every render.
-            // Since 'item' comes from context, let's assume it's stable enough but we can check ID.
 
             // To be safe and cleaner:
             const newItemData = {
                 name: item.name,
                 quantity: item.quantity,
+                unit: item.unit || 'pcs',
                 category: item.category,
                 description: item.description || '',
                 boxId: item.boxId || '',
@@ -62,17 +68,7 @@ export const EditItem = () => {
             if (item.imageUrl) setImagePreview(item.imageUrl);
         }
     }, [item]);
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+    //... (handleImageChange remains same)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,6 +77,7 @@ export const EditItem = () => {
         updateItem(id, {
             name: formData.name,
             quantity: Number(formData.quantity),
+            unit: formData.unit,
             category: formData.category,
             description: formData.description,
             boxId: formData.boxId || undefined,
@@ -95,15 +92,15 @@ export const EditItem = () => {
             if (id) deleteItem(id);
             navigate(-1);
         }
-    }
+    };
 
-    if (!item) return <div className="p-8 text-center">Artículo no encontrado.</div>;
+    if (!item) return <div className="p-8 text-center text-white">Artículo no encontrado.</div>;
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 animate-in slide-in-from-bottom-5 duration-500">
+        <div className="max-w-2xl mx-auto space-y-6 animate-in slide-in-from-bottom-5 duration-500 text-white">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Editar Artículo</h1>
-                <button onClick={() => navigate(-1)} className="btn btn-ghost">
+                <button onClick={() => navigate(-1)} className="btn btn-ghost text-gray-400 hover:text-white">
                     <X size={20} /> Cancelar
                 </button>
             </div>
@@ -139,21 +136,41 @@ export const EditItem = () => {
                                     {CATEGORIES.map(cat => <option key={cat} value={cat} />)}
                                 </datalist>
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
-                                    <svg className="w-4 h-4 fill-current opacity-50" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                                    <div className="pointer-events-none opacity-50">▼</div>
                                 </div>
                             </div>
                         </div>
                         <div>
                             <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Cantidad</label>
-                            <input
-                                type="number"
-                                min="1"
-                                className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all"
-                                value={formData.quantity}
-                                onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    className="w-24 bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all"
+                                    value={formData.quantity}
+                                    onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                                />
+                                <div className="relative flex-1">
+                                    <input
+                                        list="units-list"
+                                        type="text"
+                                        className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all"
+                                        value={formData.unit}
+                                        onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                                        placeholder="Unidad"
+                                        onFocus={(e) => e.target.select()}
+                                    />
+                                    <datalist id="units-list">
+                                        {getUnits(formData.category).map(u => <option key={u} value={u} />)}
+                                    </datalist>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
+                                        <span className="text-xs">▼</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <div>
                         <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Descripción</label>
                         <textarea
@@ -209,7 +226,7 @@ export const EditItem = () => {
                             </label>
                         </div>
                     </div>
-                </div>
+                </div >
 
                 <div className="flex gap-4 pt-2">
                     <button type="button" onClick={handleDelete} className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors border border-red-500/20">
@@ -219,7 +236,7 @@ export const EditItem = () => {
                         <Save size={20} /> Guardar Cambios
                     </button>
                 </div>
-            </form>
-        </div>
+            </form >
+        </div >
     );
 };

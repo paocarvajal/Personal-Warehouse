@@ -43,6 +43,7 @@ export interface Item {
   sku?: string; // Auto-generated SKU
   description: string;
   quantity: number;
+  unit?: string; // e.g., 'pcs', 'kg', 'ml', 'g', 'mg (tabletas)'
   category: Category;
   boxId?: string | null; // Optional: item might not be in a box yet
   imageUrl?: string | null; // Data URL or external URL

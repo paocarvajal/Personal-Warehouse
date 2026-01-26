@@ -19,6 +19,7 @@ export const AddItem = () => {
     const [formData, setFormData] = useState({
         name: '',
         quantity: 1,
+        unit: 'pcs',
         category: '' as Category,
         sku: '',
         description: '',
@@ -33,14 +34,27 @@ export const AddItem = () => {
         return `${prefix}-${randomNum}`;
     };
 
+    const getUnits = (category: string) => {
+        if (category === 'Medicina' || category === 'Farmacia' || category === 'Salud') {
+            return ['mg', 'ml', 'tabletas', 'cápsulas', 'inyectable', 'g', 'oz', 'unidades'];
+        }
+        return ['pcs', 'unidades', 'paquete', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'set', 'caja'];
+    };
+
     // Update SKU when category changes if SKU is empty or was auto-generated
     const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
         const newCategory = e.target.value as Category;
         setFormData(prev => {
             const shouldGenerate = !prev.sku || prev.sku.startsWith(prev.category.substring(0, 3).toUpperCase());
+            // Default to 'pcs' or 'tabletas' based on category change? Maybe keep current or reset.
+            // Let's reset to first relevant unit if category changes dramatically
+            const relevantUnits = getUnits(newCategory);
+            const currentUnitValid = relevantUnits.includes(prev.unit);
+
             return {
                 ...prev,
                 category: newCategory,
+                unit: currentUnitValid ? prev.unit : relevantUnits[0],
                 sku: shouldGenerate ? generateSKU(newCategory) : prev.sku
             };
         });
@@ -91,6 +105,7 @@ export const AddItem = () => {
                 name: formData.name,
                 sku: formData.sku,
                 quantity: Number(formData.quantity),
+                unit: formData.unit,
                 category: formData.category,
                 description: formData.description,
                 boxId: formData.boxId || null,

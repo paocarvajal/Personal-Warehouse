@@ -96,6 +96,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
                 name: itemData.name,
                 sku: itemData.sku || null,
                 quantity: itemData.quantity,
+                unit: itemData.unit || 'pcs',
                 category: itemData.category,
                 description: itemData.description || '',
                 boxId: itemData.boxId || null,
