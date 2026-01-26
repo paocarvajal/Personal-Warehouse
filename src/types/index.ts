@@ -40,6 +40,7 @@ export interface Benchmark {
 export interface Item {
   id: string;
   name: string;
+  sku?: string; // Auto-generated SKU
   description: string;
   quantity: number;
   category: Category;
