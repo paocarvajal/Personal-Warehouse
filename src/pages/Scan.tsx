@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
 import { useInventory } from '../context/InventoryContext';
-import { AlertTriangle, Package, Search, ChevronLeft, QrCode } from 'lucide-react';
+import { AlertTriangle, Package, Search, QrCode } from 'lucide-react';
 
 export const Scan = () => {
     const navigate = useNavigate();
