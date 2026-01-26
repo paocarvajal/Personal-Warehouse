@@ -151,19 +151,20 @@ export const AddItem = () => {
                         <div>
                             <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Categoría</label>
                             <div className="relative">
-                                <select
-                                    className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white appearance-none focus:border-purple-500 outline-none transition-all cursor-pointer"
+                                <input
+                                    list="category-list"
+                                    type="text"
+                                    className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all placeholder-gray-600"
+                                    placeholder="Escribe o selecciona..."
                                     value={formData.category}
                                     onChange={handleCategoryChange}
                                     required
-                                >
-                                    <option value="" disabled>Selecciona una categoría</option>
-                                    {CATEGORIES.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
+                                />
+                                <datalist id="category-list">
+                                    {CATEGORIES.map(cat => <option key={cat} value={cat} />)}
+                                </datalist>
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
-                                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                                    <svg className="w-4 h-4 fill-current opacity-50" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
                                 </div>
                             </div>
                         </div>
