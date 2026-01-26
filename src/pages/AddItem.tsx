@@ -28,14 +28,20 @@ export const AddItem = () => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [logs, setLogs] = useState<string[]>([]);
+
+    const addLog = (msg: string) => setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            addLog(`Selected file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
             setImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreview(reader.result as string);
+                addLog("Preview generated");
             };
             reader.readAsDataURL(file);
         }
@@ -44,11 +50,13 @@ export const AddItem = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setUploading(true);
+        addLog("Starting submit...");
 
         try {
             let finalImageUrl = undefined;
 
             if (imageFile) {
+                addLog(`Attempting upload of: ${imageFile.name}`);
                 // User wants to upload an image
                 try {
                     const storageRef = ref(storage, `items/${Date.now()}_${imageFile.name}`);
@@ -59,13 +67,17 @@ export const AddItem = () => {
                     );
 
                     const performUpload = async () => {
+                        addLog("Starting uploadBytes...");
                         const snapshot = await uploadBytes(storageRef, imageFile);
+                        addLog("UploadBytes finished. Getting URL...");
                         return await getDownloadURL(snapshot.ref);
                     };
 
                     finalImageUrl = await Promise.race([performUpload(), timeoutPromise]);
+                    addLog("Upload Success! Got URL.");
 
                 } catch (err: any) {
+                    addLog(`ERROR CATCH: ${err.message}`);
                     console.error("Upload error:", err);
 
                     let errorMsg = "Error desconocido al subir imagen.";
@@ -288,6 +300,13 @@ export const AddItem = () => {
                     )}
                 </button>
 
+                {/* DEBUG LOGS */}
+                <div className="mt-8 p-4 bg-black/50 rounded-xl text-xs font-mono text-green-400 overflow-auto max-h-40">
+                    <p className="font-bold text-white mb-2">Debug Log (Take a screenshot if stuck):</p>
+                    {logs.map((log, i) => (
+                        <div key={i}>{log}</div>
+                    ))}
+                </div>
             </form>
         </div>
     );
