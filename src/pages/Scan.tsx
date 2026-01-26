@@ -13,7 +13,11 @@ export const Scan = () => {
 
     const handleScanSuccess = (decodedText: string) => {
         setScanResult(decodedText);
-        const box = boxes.find(b => b.id === decodedText || b.qrCode === decodedText);
+        const box = boxes.find(b =>
+            b.id === decodedText ||
+            b.qrCode === decodedText ||
+            b.name.toLowerCase().includes(decodedText.toLowerCase())
+        );
         if (box) {
             navigate(`/boxes/${box.id}`);
         }
@@ -116,7 +120,7 @@ export const Scan = () => {
                             <QrCode size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
                             <input
                                 type="text"
-                                placeholder="Escribe el ID de la caja..."
+                                placeholder="Escribe el ID o Nombre de la caja..."
                                 className="input-primary"
                                 style={{ paddingLeft: '48px' }}
                                 value={manualCode}
