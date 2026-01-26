@@ -22,6 +22,23 @@ export const BoxDetails = () => {
         setSelectedItemId('');
     };
 
+    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
+    // Group items by category
+    const groupedContents = contents.reduce((acc, item) => {
+        const category = item.category || 'Sin Categoría';
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(item);
+        return acc;
+    }, {} as Record<string, typeof contents>);
+
+    const sortedCategories = Object.keys(groupedContents).sort();
+
+    // ... (handleMoveItem and handlePrint remain unchanged, but skipping them here for brevity if I include the whole return)
+
+    // NOTE: I am replacing the return block primarily.
+    // Let's replace the whole component content to be safe and clean.
+
     const handlePrint = () => {
         if (!box) return;
         const canvas = document.querySelector('#qr-code-container canvas') as HTMLCanvasElement;
@@ -36,51 +53,16 @@ export const BoxDetails = () => {
                 <head>
                     <title>Etiqueta ${box.name}</title>
                     <style>
-                        body {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                            height: 100vh;
-                            margin: 0;
-                            font-family: sans-serif;
-                        }
-                        .qr-container {
-                            border: 2px solid black;
-                            padding: 20px;
-                            text-align: center;
-                            border-radius: 10px;
-                        }
-                        img {
-                            width: 200px;
-                            height: 200px;
-                            display: block;
-                            margin: 0 auto 10px;
-                        }
-                        h2 {
-                            margin: 0;
-                            font-size: 24px;
-                            font-weight: bold;
-                        }
-                        p {
-                            margin: 5px 0 0;
-                            font-size: 14px;
-                            color: #555;
-                        }
+                        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+                        .qr-container { border: 2px solid black; padding: 20px; text-align: center; border-radius: 10px; }
+                        img { width: 200px; height: 200px; display: block; margin: 0 auto 10px; }
+                        h2 { margin: 0; font-size: 24px; font-weight: bold; }
+                        p { margin: 5px 0 0; font-size: 14px; color: #555; }
                     </style>
                 </head>
                 <body>
-                    <div class="qr-container">
-                        <img src="${pngUrl}" />
-                        <h2>${box.name}</h2>
-                        <p>${box.location}</p>
-                    </div>
-                    <script>
-                        window.onload = () => {
-                            window.print();
-                            // window.close(); // Optional: keep open for debug or auto-close
-                        }
-                    </script>
+                    <div class="qr-container"><img src="${pngUrl}" /><h2>${box.name}</h2><p>${box.location}</p></div>
+                    <script>window.onload = () => { window.print(); }</script>
                 </body>
             </html>
         `);
@@ -98,6 +80,20 @@ export const BoxDetails = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-6 animate-in slide-in-from-right-4 duration-500 space-y-8">
+            {/* Image Zoom Modal */}
+            {zoomedImage && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setZoomedImage(null)}
+                >
+                    <img
+                        src={zoomedImage}
+                        alt="Zoomed Item"
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                    />
+                    <div className="absolute top-4 right-4 text-white/50 text-sm">Click para cerrar</div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex items-start gap-6 bg-[#242938] p-6 rounded-3xl border border-gray-700 shadow-xl relative overflow-hidden">
@@ -128,8 +124,6 @@ export const BoxDetails = () => {
                         <Printer size={14} /> Imprimir Etiqueta
                     </button>
                 </div>
-
-                {/* Decorative background accent */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
 
@@ -180,10 +174,10 @@ export const BoxDetails = () => {
                 </div>
             </div>
 
-            {/* Contents List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Contents List (Grouped) */}
+            <div className="space-y-8">
                 {contents.length === 0 ? (
-                    <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-800 rounded-3xl bg-gray-900/50">
+                    <div className="py-16 text-center border-2 border-dashed border-gray-800 rounded-3xl bg-gray-900/50">
                         <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
                             <BoxIcon size={24} />
                         </div>
@@ -191,24 +185,39 @@ export const BoxDetails = () => {
                         <p className="text-gray-600 text-sm mt-1">Agrega items nuevos o mueve existentes aquí.</p>
                     </div>
                 ) : (
-                    contents.map(item => (
-                        <div
-                            key={item.id}
-                            onClick={() => navigate(`/edit/${item.id}`)}
-                            className="flex items-center gap-4 p-4 bg-[#242938] border border-gray-700 rounded-2xl hover:border-purple-500/50 hover:bg-[#2d3241] transition-all cursor-pointer group"
-                        >
-                            <div className="w-12 h-12 bg-[#1A1D29] rounded-lg flex items-center justify-center shrink-0 border border-gray-700 overflow-hidden">
-                                {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-cover" /> : <BoxIcon size={20} className="text-gray-600" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-white truncate group-hover:text-purple-400 transition-colors text-lg">{item.name}</p>
-                                <p className="text-xs text-gray-500 font-mono uppercase bg-[#1A1D29] inline-block px-1.5 py-0.5 rounded border border-gray-800 mt-1">{item.category}</p>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Cant.</span>
-                                <div className="font-mono font-bold text-white text-xl bg-[#1A1D29] px-3 py-1 rounded-lg border border-gray-700 min-w-[3rem] text-center">
-                                    {item.quantity}
-                                </div>
+                    sortedCategories.map(category => (
+                        <div key={category} className="space-y-3">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest pl-2 border-l-4 border-purple-500">
+                                {category} ({groupedContents[category].length})
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {groupedContents[category].map(item => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => navigate(`/edit/${item.id}`)}
+                                        className="flex items-center gap-4 p-4 bg-[#242938] border border-gray-700 rounded-2xl hover:border-purple-500/50 hover:bg-[#2d3241] transition-all cursor-pointer group"
+                                    >
+                                        <div
+                                            className="w-12 h-12 bg-[#1A1D29] rounded-lg flex items-center justify-center shrink-0 border border-gray-700 overflow-hidden cursor-zoom-in relative z-10 hover:ring-2 hover:ring-purple-500 transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Stop navigation
+                                                if (item.imageUrl) setZoomedImage(item.imageUrl);
+                                            }}
+                                        >
+                                            {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-cover" /> : <BoxIcon size={20} className="text-gray-600" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-white truncate group-hover:text-purple-400 transition-colors text-lg">{item.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Cant.</span>
+                                            <div className="font-mono font-bold text-white text-xl bg-[#1A1D29] px-3 py-1 rounded-lg border border-gray-700 min-w-[3rem] text-center">
+                                                {item.quantity}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     ))
