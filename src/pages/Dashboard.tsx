@@ -16,8 +16,8 @@ export const Dashboard = () => {
             {/* HEADER */}
             <div className="page-header">
                 <div className="page-title-group">
-                    <div className="greeting">Bienvenida de nuevo</div>
-                    <h1>Pao</h1>
+                    <div className="greeting">Hola</div>
+                    <h1>Usuario</h1>
                 </div>
             </div>
 

@@ -28,9 +28,9 @@ export const EditItem = () => {
 
     const getUnits = (category: string) => {
         if (category === 'Medicina' || category === 'Farmacia' || category === 'Salud') {
-            return ['mg', 'ml', 'tabletas', 'cápsulas', 'inyectable', 'g', 'oz', 'unidades'];
+            return ['pza', 'mg', 'ml', 'tabletas', 'cápsulas', 'inyectable', 'g', 'oz', 'unidades'];
         }
-        return ['pcs', 'unidades', 'paquete', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'set', 'caja'];
+        return ['pza', 'pcs', 'unidades', 'paquete', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'set', 'caja'];
     };
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -69,6 +69,19 @@ export const EditItem = () => {
         }
     }, [item]);
     //... (handleImageChange remains same)
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newCategory = e.target.value as Category;
+        setFormData(prev => {
+            const relevantUnits = getUnits(newCategory);
+            const currentUnitValid = relevantUnits.includes(prev.unit);
+            return {
+                ...prev,
+                category: newCategory,
+                unit: currentUnitValid ? prev.unit : relevantUnits[0]
+            };
+        });
+    };
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -139,7 +152,7 @@ export const EditItem = () => {
                                     className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all placeholder-gray-600"
                                     placeholder="Escribe o selecciona..."
                                     value={formData.category}
-                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                    onChange={handleCategoryChange}
                                     onFocus={(e) => e.target.select()}
                                 />
                                 <datalist id="category-list">
@@ -161,20 +174,17 @@ export const EditItem = () => {
                                     onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                                 />
                                 <div className="relative flex-1">
-                                    <input
-                                        list="units-list"
-                                        type="text"
-                                        className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all"
+                                    <select
+                                        className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white appearance-none focus:border-purple-500 outline-none transition-all cursor-pointer"
                                         value={formData.unit}
                                         onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                                        placeholder="Unidad"
-                                        onFocus={(e) => e.target.select()}
-                                    />
-                                    <datalist id="units-list">
-                                        {getUnits(formData.category).map(u => <option key={u} value={u} />)}
-                                    </datalist>
+                                    >
+                                        {getUnits(formData.category).map(u => (
+                                            <option key={u} value={u}>{u}</option>
+                                        ))}
+                                    </select>
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
-                                        <span className="text-xs">▼</span>
+                                        <div className="pointer-events-none opacity-50">▼</div>
                                     </div>
                                 </div>
                             </div>

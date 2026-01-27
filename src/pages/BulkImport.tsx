@@ -27,12 +27,13 @@ export const BulkImport = () => {
             // Split by tab (Excel paste) or pipe or comma
             const parts = line.split(/\t|\|/).map(s => s.trim());
 
-            // Format: Name | Category | Quantity | Description | Box Name (Location)
+            // Format: Name | Category | Quantity | Unit | Description | Box Name (Location)
             const name = parts[0] || '';
             const category = (parts[1] || 'Varios') as Category;
             const quantity = parseInt(parts[2] || '1') || 1;
-            const description = parts[3] || '';
-            const locationName = parts[4] || '';
+            const unit = parts[3] || 'pza';
+            const description = parts[4] || '';
+            const locationName = parts[5] || '';
 
             // Try to find box ID
             const box = boxes.find(b =>
@@ -45,6 +46,7 @@ export const BulkImport = () => {
                 name,
                 category,
                 quantity,
+                unit,
                 description,
                 boxName: locationName,
                 boxId: box?.id || null, // Will range later if not found
@@ -66,6 +68,7 @@ export const BulkImport = () => {
             await Promise.all(validItems.map(item => addItem({
                 name: item.name,
                 quantity: item.quantity,
+                unit: item.unit,
                 category: item.category,
                 description: item.description,
                 sku: item.sku,
@@ -110,13 +113,13 @@ export const BulkImport = () => {
                             Copia y pega tus datos desde Excel o Google Sheets. El formato esperado es:
                             <br />
                             <code className="bg-black/30 px-2 py-1 rounded text-purple-300 block mt-2">
-                                Nombre  [TAB]  Categoría  [TAB]  Cantidad  [TAB]  Descripción (Opc)  [TAB]  Nombre de Caja (Opc)
+                                Nombre  [TAB]  Categoría  [TAB]  Cantidad  [TAB]  Unidad  [TAB]  Descripción (Opc)  [TAB]  Nombre de Caja (Opc)
                             </code>
                         </p>
 
                         <textarea
                             className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white font-mono text-sm focus:border-purple-500 outline-none transition-all h-64 whitespace-pre"
-                            placeholder={"Taladro Makita\tHerramientas\t1\tModelo 2020\tCaja Roja\nCinta Métrica\tHerramientas\t2\t5 metros\tCaja Azul"}
+                            placeholder={"Taladro Makita\tHerramientas\t1\tpcs\tModelo 2020\tCaja Roja\nCinta Métrica\tHerramientas\t2\tm\t5 metros\tCaja Azul"}
                             value={rawText}
                             onChange={e => setRawText(e.target.value)}
                         />
@@ -148,6 +151,7 @@ export const BulkImport = () => {
                                         <th className="p-4">Nombre</th>
                                         <th className="p-4">Categoría</th>
                                         <th className="p-4 text-center">Cant.</th>
+                                        <th className="p-4">Unidad</th>
                                         <th className="p-4">Destino (Caja)</th>
                                         <th className="p-4">SKU Nuevo</th>
                                     </tr>
@@ -167,6 +171,7 @@ export const BulkImport = () => {
                                             </td>
                                             <td className="p-4 text-gray-300">{item.category}</td>
                                             <td className="p-4 text-center text-gray-300">{item.quantity}</td>
+                                            <td className="p-4 text-center text-gray-300">{item.unit}</td>
                                             <td className="p-4">
                                                 {item.boxId ? (
                                                     <span className="text-emerald-400 flex items-center gap-1">

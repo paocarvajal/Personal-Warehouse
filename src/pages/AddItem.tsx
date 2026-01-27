@@ -36,9 +36,9 @@ export const AddItem = () => {
 
     const getUnits = (category: string) => {
         if (category === 'Medicina' || category === 'Farmacia' || category === 'Salud') {
-            return ['mg', 'ml', 'tabletas', 'cápsulas', 'inyectable', 'g', 'oz', 'unidades'];
+            return ['pza', 'mg', 'ml', 'tabletas', 'cápsulas', 'inyectable', 'g', 'oz', 'unidades'];
         }
-        return ['pcs', 'unidades', 'paquete', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'set', 'caja'];
+        return ['pza', 'pcs', 'unidades', 'paquete', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'set', 'caja'];
     };
 
     // Update SKU when category changes if SKU is empty or was auto-generated
@@ -185,13 +185,29 @@ export const AddItem = () => {
                         </div>
                         <div>
                             <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Cantidad</label>
-                            <input
-                                type="number"
-                                min="1"
-                                className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all"
-                                value={formData.quantity}
-                                onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    className="w-24 bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all"
+                                    value={formData.quantity}
+                                    onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                                />
+                                <div className="relative flex-1">
+                                    <select
+                                        className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white appearance-none focus:border-purple-500 outline-none transition-all cursor-pointer"
+                                        value={formData.unit}
+                                        onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                                    >
+                                        {getUnits(formData.category).map(u => (
+                                            <option key={u} value={u}>{u}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
+                                        <div className="pointer-events-none opacity-50">▼</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Descripción (Opcional)</label>

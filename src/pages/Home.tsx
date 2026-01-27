@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { useNavigate } from 'react-router-dom';
 import { Package, Box, Search, Plus, ScanLine, ArrowRight } from 'lucide-react';
@@ -16,13 +17,27 @@ export const Home = () => {
         { label: 'Cajas', icon: Box, path: '/boxes', color: 'teal' },
     ];
 
+    const [userName, setUserName] = useState(localStorage.getItem('warehouse_user_name') || 'Usuario');
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newName = e.target.value;
+        setUserName(newName);
+        localStorage.setItem('warehouse_user_name', newName);
+    };
+
     return (
         <div className="animate-in fade-in duration-500">
 
             {/* HEADER */}
             <header className="mb-8">
-                <p className="text-gray-400 text-sm mb-1">Bienvenida de nuevo</p>
-                <h1 className="text-4xl font-bold text-white tracking-tight">Pao</h1>
+                <p className="text-gray-400 text-sm mb-1">Hola</p>
+                <input
+                    type="text"
+                    value={userName}
+                    onChange={handleNameChange}
+                    className="text-4xl font-bold text-white tracking-tight bg-transparent border-none outline-none placeholder-gray-600 w-full"
+                    placeholder="Tu Nombre"
+                />
             </header>
 
             {/* HERO / STATS */}
