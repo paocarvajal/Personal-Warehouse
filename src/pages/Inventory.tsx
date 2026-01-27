@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
-import { Search, Package, Trash2 } from 'lucide-react';
-import type { Category } from '../types';
+import { Search, Package, Trash2, Filter, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Inventory = () => {
     const { items, boxes, updateItem, deleteItem } = useInventory();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState<Category | 'All'>('All');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
     const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
@@ -21,10 +21,13 @@ export const Inventory = () => {
         return box ? box.name : 'Caja desconocida';
     };
 
+    // Dynamic Categories from items
+    const availableCategories = Array.from(new Set(items.map(i => i.category || 'Sin Categoría'))).sort();
+
     const filteredItems = items.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
+        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(item.category);
         return matchesSearch && matchesCategory;
     });
 
@@ -107,7 +110,7 @@ export const Inventory = () => {
             </div>
 
             {/* Controls */}
-            <div className="space-y-6 mb-8">
+            <div className="space-y-4 mb-8">
                 {/* Search Bar */}
                 <div className="relative group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-400 transition-colors" size={22} />
@@ -120,30 +123,57 @@ export const Inventory = () => {
                     />
                 </div>
 
-                {/* Categories */}
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {/* ... (existing category buttons) ... */}
-                    <button
-                        onClick={() => setCategoryFilter('All')}
-                        className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border ${categoryFilter === 'All'
-                            ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30'
-                            : 'bg-[#242938] border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
-                            }`}
-                    >
-                        Todo
-                    </button>
-                    {['Carpintería', 'Plomería', 'Electricidad', 'Jardinería', 'Pintura', 'Automotriz', 'Varios'].map(cat => (
+                {/* Filter Controls */}
+                <div>
+                    <div className="flex gap-2 items-center">
                         <button
-                            key={cat}
-                            onClick={() => setCategoryFilter(cat as Category)}
-                            className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border ${categoryFilter === cat
-                                ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30'
-                                : 'bg-[#242938] border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
-                                }`}
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all border ${isFilterOpen || selectedCategories.length > 0 ? 'bg-purple-600 border-purple-500 text-white shadow-lg' : 'bg-[#242938] text-gray-400 border-gray-700 hover:bg-[#2d3241]'}`}
                         >
-                            {cat}
+                            <Filter size={18} />
+                            Filtros {selectedCategories.length > 0 && `(${selectedCategories.length})`}
                         </button>
-                    ))}
+
+                        {selectedCategories.length > 0 && (
+                            <button
+                                onClick={() => setSelectedCategories([])}
+                                className="flex items-center gap-1 text-sm text-gray-400 hover:text-white px-3 transition-colors"
+                            >
+                                <X size={14} /> Limpiar filtros
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Collapsible Filter Panel */}
+                    {isFilterOpen && (
+                        <div className="mt-4 bg-[#242938] border border-gray-700 rounded-2xl p-5 animate-in slide-in-from-top-2 shadow-xl">
+                            <h3 className="text-gray-400 font-bold mb-3 text-xs uppercase tracking-wider">Categorías Disponibles</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {availableCategories.length === 0 ? (
+                                    <p className="text-gray-500 text-sm">No hay categorías disponibles.</p>
+                                ) : (
+                                    availableCategories.map(cat => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => {
+                                                if (selectedCategories.includes(cat)) {
+                                                    setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                                                } else {
+                                                    setSelectedCategories([...selectedCategories, cat]);
+                                                }
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${selectedCategories.includes(cat)
+                                                ? 'bg-purple-500 border-purple-500 text-white shadow-md'
+                                                : 'bg-[#1A1D29] border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white hover:bg-[#242938]'
+                                                }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
