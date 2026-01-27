@@ -5,11 +5,21 @@ import type { Category } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 export const Inventory = () => {
-    const { items, boxes } = useInventory();
+    const { items, boxes, updateItem } = useInventory();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<Category | 'All'>('All');
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
+    const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+    const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+    const [targetBoxId, setTargetBoxId] = useState('');
+
+    const getBoxName = (boxId?: string | null) => {
+        if (!boxId) return 'Suelto';
+        const box = boxes.find(b => b.id === boxId);
+        return box ? box.name : 'Caja desconocida';
+    };
 
     const filteredItems = items.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -18,14 +28,70 @@ export const Inventory = () => {
         return matchesSearch && matchesCategory;
     });
 
-    const getBoxName = (boxId?: string) => {
-        if (!boxId) return 'Suelto';
-        const box = boxes.find(b => b.id === boxId);
-        return box ? box.name : 'Caja desconocida';
+    const toggleSelection = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setSelectedItemIds(prev =>
+            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkMove = async () => {
+        if (!targetBoxId) return;
+
+        // Execute updates
+        const updates = selectedItemIds.map(id => updateItem(id, { boxId: targetBoxId }));
+        await Promise.all(updates);
+
+        // Reset
+        setSelectedItemIds([]);
+        setIsMoveModalOpen(false);
+        setTargetBoxId('');
+        alert(`✅ ${updates.length} artículos movidos exitosamente.`);
     };
 
     return (
-        <div className="max-w-7xl mx-auto p-6 min-h-screen">
+        <div className="max-w-7xl mx-auto p-6 min-h-screen relative">
+            {/* Bulk Actions Modal */}
+            {isMoveModalOpen && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+                    <div className="bg-[#242938] p-6 rounded-2xl border border-gray-700 shadow-2xl max-w-md w-full space-y-4">
+                        <h3 className="text-xl font-bold text-white">Mover {selectedItemIds.length} artículos a:</h3>
+
+                        <div className="relative">
+                            <select
+                                className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white appearance-none focus:border-purple-500 outline-none transition-all cursor-pointer"
+                                value={targetBoxId}
+                                onChange={e => setTargetBoxId(e.target.value)}
+                            >
+                                <option value="">-- Selecciona una caja destino --</option>
+                                {boxes.map(box => (
+                                    <option key={box.id} value={box.id}>📦 {box.name}</option>
+                                ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
+                                <span className="text-xs">▼</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={() => setIsMoveModalOpen(false)}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-white/5 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleBulkMove}
+                                disabled={!targetBoxId}
+                                className="flex-1 btn btn-primary py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Confirmar Mover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-8">
                 <div>
@@ -56,6 +122,7 @@ export const Inventory = () => {
 
                 {/* Categories */}
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    {/* ... (existing category buttons) ... */}
                     <button
                         onClick={() => setCategoryFilter('All')}
                         className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border ${categoryFilter === 'All'
@@ -80,10 +147,34 @@ export const Inventory = () => {
                 </div>
             </div>
 
+            {/* Bulk Selection Bar */}
+            {selectedItemIds.length > 0 && (
+                <div className="sticky top-4 z-50 mb-6 bg-purple-600/90 backdrop-blur-md border border-purple-500/20 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-2 shadow-2xl">
+                    <div className="flex items-center gap-3">
+                        <span className="font-bold text-white">
+                            {selectedItemIds.length} seleccionados
+                        </span>
+                        <button
+                            onClick={() => setSelectedItemIds([])}
+                            className="text-sm text-purple-200 hover:text-white underline"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => setIsMoveModalOpen(true)}
+                        className="bg-white text-purple-600 font-bold px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+                    >
+                        <span>📦</span> Mover a Caja
+                    </button>
+                </div>
+            )}
+
             {/* List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20">
                 {filteredItems.length === 0 ? (
                     <div className="col-span-full py-20 flex flex-col items-center justify-center text-center text-gray-500">
+                        {/* ... (empty state) ... */}
                         <div className="w-20 h-20 bg-[#242938] rounded-full flex items-center justify-center mb-4">
                             <Search size={32} className="opacity-50" />
                         </div>
@@ -99,10 +190,29 @@ export const Inventory = () => {
                 ) : (
                     filteredItems.map(item => (
                         <div
-                            onClick={() => navigate(`/product/${item.id}`)}
+                            onClick={() => {
+                                if (selectedItemIds.length > 0) {
+                                    toggleSelection(item.id);
+                                } else {
+                                    navigate(`/product/${item.id}`);
+                                }
+                            }}
                             key={item.id}
-                            className="group bg-[#242938] border border-gray-700 hover:border-purple-500/50 rounded-2xl p-4 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden"
+                            className={`group bg-[#242938] border rounded-2xl p-4 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${selectedItemIds.includes(item.id)
+                                ? 'border-purple-500 ring-1 ring-purple-500 bg-purple-500/10'
+                                : 'border-gray-700 hover:border-purple-500/50'
+                                }`}
                         >
+                            {/* Selection Checkbox (Visible on hover or selected) */}
+                            <div className={`absolute top-2 right-2 z-30 transition-opacity ${selectedItemIds.length > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                <div
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedItemIds.includes(item.id) ? 'bg-purple-500 border-purple-500' : 'border-gray-500 bg-black/40'}`}
+                                    onClick={(e) => toggleSelection(item.id, e)}
+                                >
+                                    {selectedItemIds.includes(item.id) && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                </div>
+                            </div>
+
                             {/* Edit Pencil Icon (Top Left) */}
                             <button
                                 onClick={(e) => {
@@ -155,9 +265,12 @@ export const Inventory = () => {
 
                             <div className="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center">
                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cantidad</span>
-                                <span className={`text-xl font-mono font-bold ${item.quantity < 3 ? 'text-red-400' : 'text-white'}`}>
-                                    {item.quantity}
-                                </span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className={`text-xl font-mono font-bold ${item.quantity < 3 ? 'text-red-400' : 'text-white'}`}>
+                                        {item.quantity}
+                                    </span>
+                                    {item.unit && <span className="text-xs text-gray-500 font-medium">{item.unit}</span>}
+                                </div>
                             </div>
                         </div>
                     ))
