@@ -2,11 +2,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, Box as BoxIcon, Printer, X } from 'lucide-react';
+import { ArrowLeft, Box as BoxIcon, Printer, X, Trash2 } from 'lucide-react';
 
 export const BoxDetails = () => {
     const { id } = useParams<{ id: string }>();
-    const { boxes, getBoxContents, items, updateItem } = useInventory();
+    const { boxes, getBoxContents, items, updateItem, deleteBox } = useInventory();
     const navigate = useNavigate();
 
     const [itemsToMove, setItemsToMove] = useState<string[]>([]);
@@ -135,6 +135,20 @@ export const BoxDetails = () => {
                     >
                         <Printer size={14} /> Imprimir Etiqueta
                     </button>
+                    <button
+                        onClick={async () => {
+                            if (confirm('¿Estás seguro de eliminar esta caja? Los artículos quedarán "sueltos".')) {
+                                for (const item of contents) {
+                                    await updateItem(item.id, { boxId: null });
+                                }
+                                await deleteBox(box.id);
+                                navigate('/boxes');
+                            }
+                        }}
+                        className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors font-medium mt-1"
+                    >
+                        <Trash2 size={14} /> Eliminar Caja
+                    </button>
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
@@ -187,8 +201,8 @@ export const BoxDetails = () => {
                                         key={item.id}
                                         onClick={() => toggleItemToMove(item.id)}
                                         className={`flex items-center gap-4 p-3 rounded-xl border cursor-pointer transition-all ${itemsToMove.includes(item.id)
-                                                ? 'bg-purple-500/20 border-purple-500'
-                                                : 'bg-[#1A1D29] border-gray-700 hover:border-gray-500'
+                                            ? 'bg-purple-500/20 border-purple-500'
+                                            : 'bg-[#1A1D29] border-gray-700 hover:border-gray-500'
                                             }`}
                                     >
                                         <div className={`w-5 h-5 rounded border flex items-center justify-center ${itemsToMove.includes(item.id) ? 'bg-purple-500 border-purple-500' : 'border-gray-500'}`}>

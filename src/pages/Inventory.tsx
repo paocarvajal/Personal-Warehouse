@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
-import { Search, Package } from 'lucide-react';
+import { Search, Package, Trash2 } from 'lucide-react';
 import type { Category } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 export const Inventory = () => {
-    const { items, boxes, updateItem } = useInventory();
+    const { items, boxes, updateItem, deleteItem } = useInventory();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<Category | 'All'>('All');
@@ -166,6 +166,17 @@ export const Inventory = () => {
                         className="bg-white text-purple-600 font-bold px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
                     >
                         <span>📦</span> Mover a Caja
+                    </button>
+                    <button
+                        onClick={async () => {
+                            if (confirm(`¿Estás seguro de eliminar ${selectedItemIds.length} artículos?`)) {
+                                await Promise.all(selectedItemIds.map(id => deleteItem(id)));
+                                setSelectedItemIds([]);
+                            }
+                        }}
+                        className="bg-white text-red-500 font-bold px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2 ml-2"
+                    >
+                        <Trash2 size={18} />
                     </button>
                 </div>
             )}
