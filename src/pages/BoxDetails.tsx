@@ -2,13 +2,17 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, Box as BoxIcon, Printer } from 'lucide-react';
+import { ArrowLeft, Box as BoxIcon, Printer, X } from 'lucide-react';
 
 export const BoxDetails = () => {
     const { id } = useParams<{ id: string }>();
     const { boxes, getBoxContents, items, updateItem } = useInventory();
     const navigate = useNavigate();
-    const [selectedItemId, setSelectedItemId] = useState('');
+
+    const [itemsToMove, setItemsToMove] = useState<string[]>([]);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [moveSearchTerm, setMoveSearchTerm] = useState('');
+    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
     const box = boxes.find(b => b.id === id);
     const contents = id ? getBoxContents(id) : [];
@@ -16,13 +20,26 @@ export const BoxDetails = () => {
     // Items that are NOT in this box already
     const availableItems = items.filter(i => i.boxId !== id);
 
-    const handleMoveItem = () => {
-        if (!selectedItemId || !id) return;
-        updateItem(selectedItemId, { boxId: id });
-        setSelectedItemId('');
+    const toggleItemToMove = (itemId: string) => {
+        setItemsToMove(prev =>
+            prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+        );
     };
 
-    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+    const handleBulkMoveToBox = async () => {
+        if (itemsToMove.length === 0 || !id) return;
+
+        await Promise.all(itemsToMove.map(itemId => updateItem(itemId, { boxId: id })));
+
+        setItemsToMove([]);
+        setIsAddModalOpen(false);
+        setMoveSearchTerm('');
+    };
+
+    const filteredAvailableItems = availableItems.filter(item =>
+        item.name.toLowerCase().includes(moveSearchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(moveSearchTerm.toLowerCase())
+    );
 
     // Group items by category
     const groupedContents = contents.reduce((acc, item) => {
@@ -33,11 +50,6 @@ export const BoxDetails = () => {
     }, {} as Record<string, typeof contents>);
 
     const sortedCategories = Object.keys(groupedContents).sort();
-
-    // ... (handleMoveItem and handlePrint remain unchanged, but skipping them here for brevity if I include the whole return)
-
-    // NOTE: I am replacing the return block primarily.
-    // Let's replace the whole component content to be safe and clean.
 
     const handlePrint = () => {
         if (!box) return;
@@ -52,7 +64,7 @@ export const BoxDetails = () => {
             <html>
                 <head>
                     <title>Etiqueta ${box.name}</title>
-                    <style>
+                       <style>
                         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
                         .qr-container { border: 2px solid black; padding: 20px; text-align: center; border-radius: 10px; }
                         img { width: 200px; height: 200px; display: block; margin: 0 auto 10px; }
@@ -127,52 +139,91 @@ export const BoxDetails = () => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
 
-            {/* Search / Add Contextual */}
-            <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-800 pb-2">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        Contenido
-                        <span className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded-lg text-sm">{contents.length}</span>
-                    </h2>
-                    <Link to={`/add?boxId=${box.id}`} className="btn btn-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                        <BoxIcon size={16} /> Agregar nuevo item aquí
+            {/* Actions Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-800 pb-2">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    Contenido
+                    <span className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded-lg text-sm">{contents.length}</span>
+                </h2>
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex-1 sm:flex-none btn bg-[#242938] hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                    >
+                        📥 Mover existentes aquí
+                    </button>
+                    <Link to={`/add?boxId=${box.id}`} className="flex-1 sm:flex-none btn btn-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                        <BoxIcon size={16} /> Crear nuevo item
                     </Link>
                 </div>
+            </div>
 
-                {/* Quick Add Existing Item */}
-                <div className="bg-[#242938]/50 p-4 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
-                    <label className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3 block">
-                        Mover artículo existente a esta caja:
-                    </label>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl px-4 py-3 text-white appearance-none focus:border-purple-500 outline-none transition-all cursor-pointer text-sm"
-                                value={selectedItemId}
-                                onChange={(e) => setSelectedItemId(e.target.value)}
-                            >
-                                <option value="">-- Buscar artículo para mover... --</option>
-                                {availableItems.map(item => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.name} {item.boxId ? '📦 (En otra caja)' : '📌 (Sin caja)'}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
-                                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
-                            </div>
+            {/* Add Existing Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+                    <div className="bg-[#242938] rounded-2xl border border-gray-700 shadow-2xl max-w-2xl w-full flex flex-col max-h-[85vh]">
+                        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white">Mover ítems a {box.name}</h3>
+                            <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-white"><X size={24} /></button>
                         </div>
 
-                        <button
-                            disabled={!selectedItemId}
-                            onClick={handleMoveItem}
-                            className="btn bg-gray-700 hover:bg-purple-600 text-white disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-bold transition-all shadow-lg"
-                        >
-                            Mover Aquí
-                        </button>
+                        <div className="p-4 border-b border-gray-700 bg-[#1A1D29]">
+                            <input
+                                type="text"
+                                autoFocus
+                                placeholder="Buscar artículo por nombre..."
+                                className="w-full bg-[#242938] border border-gray-700 rounded-xl p-3 text-white focus:border-purple-500 outline-none"
+                                value={moveSearchTerm}
+                                onChange={e => setMoveSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            {filteredAvailableItems.length === 0 ? (
+                                <div className="text-center text-gray-500 py-10">No hay ítems disponibles.</div>
+                            ) : (
+                                filteredAvailableItems.map(item => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => toggleItemToMove(item.id)}
+                                        className={`flex items-center gap-4 p-3 rounded-xl border cursor-pointer transition-all ${itemsToMove.includes(item.id)
+                                                ? 'bg-purple-500/20 border-purple-500'
+                                                : 'bg-[#1A1D29] border-gray-700 hover:border-gray-500'
+                                            }`}
+                                    >
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${itemsToMove.includes(item.id) ? 'bg-purple-500 border-purple-500' : 'border-gray-500'}`}>
+                                            {itemsToMove.includes(item.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-white text-sm">{item.name}</p>
+                                            <p className="text-xs text-gray-400 flex items-center gap-2">
+                                                {item.category} • {item.boxId ? '📦 En otra caja' : '📌 Suelto'}
+                                            </p>
+                                        </div>
+                                        {item.imageUrl && <img src={item.imageUrl} className="w-8 h-8 rounded object-cover" />}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t border-gray-700 flex gap-3 bg-[#242938] rounded-b-2xl">
+                            <button
+                                onClick={() => setIsAddModalOpen(false)}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-white/5 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleBulkMoveToBox}
+                                disabled={itemsToMove.length === 0}
+                                className="flex-1 btn btn-primary py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Mover {itemsToMove.length} Ítems Aquí
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Contents List (Grouped) */}
             <div className="space-y-8">
