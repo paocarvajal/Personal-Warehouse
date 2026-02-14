@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Item, Box, BenchmarkItem } from '../types';
+import { useAuth } from './AuthContext';
 import { db } from '../firebase';
 import {
     collection,
@@ -34,6 +35,7 @@ interface InventoryContextType {
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
+    const { user } = useAuth();
     const [items, setItems] = useState<Item[]>([]);
     const [boxes, setBoxes] = useState<Box[]>([]);
     const [benchmarks, setBenchmarks] = useState<BenchmarkItem[]>([]);
@@ -42,7 +44,13 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     // Subscribe to Items
     useEffect(() => {
-        const q = query(collection(db, 'items'));
+        if (!user) {
+            setItems([]);
+            setLoading(false);
+            return;
+        }
+
+        const q = query(collection(db, 'users', user.uid, 'items'));
         const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
             const itemsData: Item[] = [];
             querySnapshot.forEach((doc) => {
@@ -58,11 +66,16 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     // Subscribe to Boxes
     useEffect(() => {
-        const q = query(collection(db, 'boxes'));
+        if (!user) {
+            setBoxes([]);
+            return;
+        }
+
+        const q = query(collection(db, 'users', user.uid, 'boxes'));
         const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
             const boxesData: Box[] = [];
             querySnapshot.forEach((doc) => {
@@ -74,11 +87,16 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     // Subscribe to Benchmarks
     useEffect(() => {
-        const q = query(collection(db, 'benchmarks'));
+        if (!user) {
+            setBenchmarks([]);
+            return;
+        }
+
+        const q = query(collection(db, 'users', user.uid, 'benchmarks'));
         const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
             const bmData: BenchmarkItem[] = [];
             querySnapshot.forEach((doc) => {
@@ -87,10 +105,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
             setBenchmarks(bmData.sort((a, b) => b.createdAt - a.createdAt));
         }, (err: Error) => { console.error("Error fetching benchmarks:", err); });
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     const addItem = async (itemData: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>) => {
         try {
+            if (!user) throw new Error("User not authenticated");
             // Explicitly map fields to avoid undefined values. Use null for optional fields.
             const docData = {
                 name: itemData.name,
@@ -107,7 +126,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
                 updatedAt: Date.now(),
             };
 
-            await addDoc(collection(db, 'items'), docData);
+            await addDoc(collection(db, 'users', user.uid, 'items'), docData);
         } catch (e) {
             console.error("Error adding item: ", e);
             throw e;
@@ -116,7 +135,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const updateItem = async (id: string, updates: Partial<Item>) => {
         try {
-            const itemRef = doc(db, 'items', id);
+            if (!user) throw new Error("User not authenticated");
+            const itemRef = doc(db, 'users', user.uid, 'items', id);
 
             // Remove undefined fields to prevent Firestore errors
             const cleanUpdates = Object.fromEntries(
@@ -135,7 +155,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const deleteItem = async (id: string) => {
         try {
-            await deleteDoc(doc(db, 'items', id));
+            if (!user) throw new Error("User not authenticated");
+            await deleteDoc(doc(db, 'users', user.uid, 'items', id));
         } catch (e) {
             console.error("Error deleting item: ", e);
             throw e;
@@ -144,7 +165,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const addBenchmark = async (bmData: Omit<BenchmarkItem, 'id' | 'createdAt'>) => {
         try {
-            await addDoc(collection(db, 'benchmarks'), {
+            if (!user) throw new Error("User not authenticated");
+            await addDoc(collection(db, 'users', user.uid, 'benchmarks'), {
                 ...bmData,
                 createdAt: Date.now(),
                 options: bmData.options || []
@@ -154,7 +176,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const updateBenchmark = async (id: string, updates: Partial<BenchmarkItem>) => {
         try {
-            const bmRef = doc(db, 'benchmarks', id);
+            if (!user) throw new Error("User not authenticated");
+            const bmRef = doc(db, 'users', user.uid, 'benchmarks', id);
             // Remove undefined fields to prevent Firestore errors
             const cleanUpdates = Object.fromEntries(
                 Object.entries(updates).filter(([_, v]) => v !== undefined)
@@ -164,14 +187,18 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const deleteBenchmark = async (id: string) => {
-        try { await deleteDoc(doc(db, 'benchmarks', id)); }
+        try { 
+            if (!user) throw new Error("User not authenticated");
+            await deleteDoc(doc(db, 'users', user.uid, 'benchmarks', id)); 
+        }
         catch (e) { console.error("Error deleting benchmark: ", e); throw e; }
     };
 
     const addBox = async (boxData: Omit<Box, 'id' | 'createdAt' | 'qrCode'>) => {
         try {
+            if (!user) throw new Error("User not authenticated");
             // Create a reference with an auto-generated ID
-            const newBoxRef = doc(collection(db, 'boxes'));
+            const newBoxRef = doc(collection(db, 'users', user.uid, 'boxes'));
             const boxId = newBoxRef.id;
 
             // Define the box object
@@ -194,7 +221,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const deleteBox = async (id: string) => {
         try {
-            await deleteDoc(doc(db, 'boxes', id));
+            if (!user) throw new Error("User not authenticated");
+            await deleteDoc(doc(db, 'users', user.uid, 'boxes', id));
             // Optional: Remove boxId from items in this box? 
             // For now, let's leave them "orphaned" or handle logic elsewhere
         } catch (e) {
