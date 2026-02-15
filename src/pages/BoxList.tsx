@@ -8,14 +8,21 @@ export const BoxList = () => {
     const { boxes, addBox, deleteBox } = useInventory();
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
-    const [newBoxData, setNewBoxData] = useState({ name: '', location: '', description: '' });
+    const [newBoxData, setNewBoxData] = useState({ name: '', location: '', description: '', category: '' });
     const [selectedBoxIds, setSelectedBoxIds] = useState<string[]>([]);
+
+    // Categories for selection (same as Explorer)
+    const PREDEFINED_CATEGORIES = [
+        'Ropa', 'Herramientas', 'Medicina', 'Hogar', 'Electrónica',
+        'Papelería', 'Juguetes', 'Varios', 'Carpintería', 'Plomería',
+        'Electricidad', 'Jardinería', 'Pintura', 'Automotriz'
+    ];
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
         addBox(newBoxData);
         setIsCreating(false);
-        setNewBoxData({ name: '', location: '', description: '' });
+        setNewBoxData({ name: '', location: '', description: '', category: '' });
     };
 
     const toggleSelection = (id: string) => {
@@ -87,6 +94,24 @@ export const BoxList = () => {
                                     value={newBoxData.location}
                                     onChange={e => setNewBoxData({ ...newBoxData, location: e.target.value })}
                                 />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Categoría Principal (Opcional)</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {PREDEFINED_CATEGORIES.map(cat => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => setNewBoxData({ ...newBoxData, category: newBoxData.category === cat ? '' : cat })}
+                                            className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${newBoxData.category === cat
+                                                    ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-105'
+                                                    : 'bg-[#1A1D29] text-gray-400 border-gray-700 hover:border-gray-500'
+                                                }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div className="flex justify-end gap-3 pt-2">

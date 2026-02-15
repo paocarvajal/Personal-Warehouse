@@ -116,8 +116,15 @@ export const BoxDetails = () => {
                     <ArrowLeft size={24} />
                 </button>
                 <div className="flex-1 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider mb-2">
-                        <BoxIcon size={12} /> Contenedor
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider">
+                            <BoxIcon size={12} /> Contenedor
+                        </div>
+                        {box.category && (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider">
+                                📌 {box.category}
+                            </div>
+                        )}
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{box.name}</h1>
                     <p className="text-gray-400 flex items-center gap-2">

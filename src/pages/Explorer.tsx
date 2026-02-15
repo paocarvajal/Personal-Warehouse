@@ -52,10 +52,16 @@ export const Explorer = () => {
         ? items.filter(i => i.category === activeCategory)
         : items;
 
-    // 3. Find Boxes that belong to this Category (if they contain at least 1 item of this category)
+    // 3. Find Boxes that belong to this Category
+    // This looks for:
+    // A) Boxes EXPLICITLY assigned to this category
+    // B) Boxes containing ITEMS of this category
     const boxesInThisCategory = activeCategory
         ? boxes.filter(box => {
-            // Box has explicit category (future) OR contains items of this category
+            // Check direct assignment
+            if (box.category === activeCategory) return true;
+
+            // Check content inference
             const boxItems = items.filter(i => i.boxId === box.id);
             return boxItems.some(i => i.category === activeCategory);
         })

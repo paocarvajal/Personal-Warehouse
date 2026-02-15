@@ -24,6 +24,7 @@ export interface Box {
   name: string;
   location: string; // e.g., "Estantería A", "Cajón Banco"
   description: string;
+  category?: string;
   qrCode: string; // The unique string stored in the QR
   createdAt: number;
 }
