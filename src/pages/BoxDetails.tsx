@@ -1,17 +1,20 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, Box as BoxIcon, Printer, X, Trash2, Edit2, Save } from 'lucide-react';
+import { ArrowLeft, Box as BoxIcon, Printer, X, Trash2, Edit2, Save, Search } from 'lucide-react';
 
 export const BoxDetails = () => {
     const { id } = useParams<{ id: string }>();
     const { boxes, getBoxContents, items, updateItem, deleteBox, updateBox } = useInventory();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const highlightId = searchParams.get('highlight');
 
     const [itemsToMove, setItemsToMove] = useState<string[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [moveSearchTerm, setMoveSearchTerm] = useState('');
+    const [boxSearchTerm, setBoxSearchTerm] = useState('');
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
     // Create local editable state
@@ -70,6 +73,29 @@ export const BoxDetails = () => {
 
     const contents = id ? getBoxContents(id) : [];
 
+    // Highlight effect
+    useEffect(() => {
+        if (highlightId) {
+            // Small delay to ensure render
+            setTimeout(() => {
+                const el = document.getElementById(`item-${highlightId}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('ring-2', 'ring-purple-500', 'ring-offset-2', 'ring-offset-[#242938]');
+                    // Remove highlight after 3 seconds
+                    setTimeout(() => {
+                        el.classList.remove('ring-2', 'ring-purple-500', 'ring-offset-2', 'ring-offset-[#242938]');
+                    }, 3000);
+                }
+            }, 500);
+        }
+    }, [highlightId, id, contents]);
+
+    const filteredContents = contents.filter(item =>
+        item.name.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
+        (item.category && item.category.toLowerCase().includes(boxSearchTerm.toLowerCase()))
+    );
+
     // Items that are NOT in this box already
     const availableItems = items.filter(i => i.boxId !== id);
 
@@ -78,8 +104,8 @@ export const BoxDetails = () => {
         item.category.toLowerCase().includes(moveSearchTerm.toLowerCase())
     );
 
-    // Group items by category
-    const groupedContents = contents.reduce((acc, item) => {
+    // Group items by category (use FILTERED contents)
+    const groupedContents = filteredContents.reduce((acc, item) => {
         const category = item.category || 'Sin Categoría';
         if (!acc[category]) acc[category] = [];
         acc[category].push(item);
@@ -273,21 +299,37 @@ export const BoxDetails = () => {
             </div>
 
             {/* Actions Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-800 pb-2">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    Contenido
-                    <span className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded-lg text-sm">{contents.length}</span>
-                </h2>
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex-1 sm:flex-none btn bg-[#242938] hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                    >
-                        📥 Mover existentes aquí
-                    </button>
-                    <Link to={`/add?boxId=${box.id}`} className="flex-1 sm:flex-none btn btn-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
-                        <BoxIcon size={16} /> Crear nuevo item
-                    </Link>
+            <div className="flex flex-col gap-4 border-b border-gray-800 pb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        Contenido
+                        <span className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded-lg text-sm">{filteredContents.length} / {contents.length}</span>
+                    </h2>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex-1 sm:flex-none btn bg-[#242938] hover:bg-gray-700 border border-gray-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                        >
+                            📥 Mover existentes aquí
+                        </button>
+                        <Link to={`/add?boxId=${box.id}`} className="flex-1 sm:flex-none btn btn-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                            <BoxIcon size={16} /> Crear nuevo item
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Search in Box */}
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-500" />
+                    </div>
+                    <input
+                        type="text"
+                        className="block w-full pl-9 pr-3 py-2 border border-gray-700 rounded-lg leading-5 bg-[#1A1D29] text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-[#242938] focus:border-purple-500 focus:ring-1 focus:ring-purple-500 sm:text-sm transition-colors"
+                        placeholder="Buscar artículo en esta caja..."
+                        value={boxSearchTerm}
+                        onChange={(e) => setBoxSearchTerm(e.target.value)}
+                    />
                 </div>
             </div>
 
@@ -368,6 +410,10 @@ export const BoxDetails = () => {
                         <p className="text-gray-400 font-medium">Esta caja está vacía.</p>
                         <p className="text-gray-600 text-sm mt-1">Agrega items nuevos o mueve existentes aquí.</p>
                     </div>
+                ) : filteredContents.length === 0 ? (
+                    <div className="py-12 text-center border border-gray-800 rounded-2xl">
+                        <p className="text-gray-500">No se encontraron artículos que coincidan con la búsqueda.</p>
+                    </div>
                 ) : (
                     sortedCategories.map(category => (
                         <div key={category} className="space-y-3">
@@ -378,6 +424,7 @@ export const BoxDetails = () => {
                                 {groupedContents[category].map(item => (
                                     <div
                                         key={item.id}
+                                        id={`item-${item.id}`}
                                         onClick={() => navigate(`/edit/${item.id}`)}
                                         className="flex items-center gap-4 p-4 bg-[#242938] border border-gray-700 rounded-2xl hover:border-purple-500/50 hover:bg-[#2d3241] transition-all cursor-pointer group"
                                     >

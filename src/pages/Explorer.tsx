@@ -170,19 +170,25 @@ export const Explorer = () => {
         })
         : boxes;
 
-    const filteredItems = activeCategory
-        ? items.filter(i => {
-            const matchesCategory = i.category === activeCategory;
-            const isLoose = !i.boxId;
-            return matchesCategory && isLoose;
-        })
-        : items;
+    // Unified Filtering Logic
+    const displayedItems = items.filter(i => {
+        // 1. Category Filter
+        if (activeCategory && i.category !== activeCategory) return false;
 
-    // Search Filtering
-    const displayedItems = filteredItems.filter(i =>
-        i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        i.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+        // 2. Search Filter
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = !query ||
+            i.name.toLowerCase().includes(query) ||
+            i.tags.some(t => t.toLowerCase().includes(query));
+
+        if (!matchesSearch) return false;
+
+        // 3. View Rule: If NOT searching, hide items that are inside boxes (to avoid clutter)
+        //    If searching, show EVERYTHING so user can find that screwdriver
+        if (!query && i.boxId) return false;
+
+        return true;
+    });
 
     const displayedBoxes = boxesInThisCategory.filter(b =>
         b.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -216,6 +222,14 @@ export const Explorer = () => {
                 </div>
             </div>
         );
+    };
+
+    const handleItemClick = (item: typeof items[0]) => {
+        if (item.boxId) {
+            navigate(`/boxes/${item.boxId}?highlight=${item.id}`);
+        } else {
+            navigate(`/edit/${item.id}`);
+        }
     };
 
     return (
@@ -334,7 +348,7 @@ export const Explorer = () => {
                                     {displayedItems.map(item => (
                                         <div
                                             key={item.id}
-                                            onClick={() => navigate(`/edit/${item.id}`)}
+                                            onClick={() => handleItemClick(item)}
                                             className="glass-panel p-3 rounded-xl hover:bg-white/5 cursor-pointer group flex flex-col gap-3"
                                         >
                                             <div className="aspect-square rounded-lg bg-slate-800 overflow-hidden flex items-center justify-center relative">
@@ -361,7 +375,7 @@ export const Explorer = () => {
                                     {displayedItems.map(item => (
                                         <div
                                             key={item.id}
-                                            onClick={() => navigate(`/edit/${item.id}`)}
+                                            onClick={() => handleItemClick(item)}
                                             className="glass-panel p-3 rounded-xl flex items-center gap-4 hover:bg-white/5 cursor-pointer"
                                         >
                                             <div className="w-10 h-10 rounded bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">

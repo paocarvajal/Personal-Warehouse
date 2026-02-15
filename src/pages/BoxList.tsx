@@ -10,6 +10,13 @@ export const BoxList = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [newBoxData, setNewBoxData] = useState({ name: '', location: '', description: '', category: '' });
     const [selectedBoxIds, setSelectedBoxIds] = useState<string[]>([]);
+    const [boxSearchTerm, setBoxSearchTerm] = useState('');
+
+    const filteredBoxes = boxes.filter(box =>
+        box.name.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
+        box.location.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
+        (box.category && box.category.toLowerCase().includes(boxSearchTerm.toLowerCase()))
+    );
 
     // Categories for selection (same as Explorer)
     const PREDEFINED_CATEGORIES = [
@@ -104,8 +111,8 @@ export const BoxList = () => {
                                             type="button"
                                             onClick={() => setNewBoxData({ ...newBoxData, category: newBoxData.category === cat ? '' : cat })}
                                             className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${newBoxData.category === cat
-                                                    ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-105'
-                                                    : 'bg-[#1A1D29] text-gray-400 border-gray-700 hover:border-gray-500'
+                                                ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-105'
+                                                : 'bg-[#1A1D29] text-gray-400 border-gray-700 hover:border-gray-500'
                                                 }`}
                                         >
                                             {cat}
@@ -133,29 +140,47 @@ export const BoxList = () => {
                 </div>
             )}
 
-            {/* Selection Toolbar */}
-            {selectedBoxIds.length > 0 && (
-                <div className="mb-6 bg-purple-600/10 border border-purple-500/20 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-                    <div className="flex items-center gap-3">
-                        <span className="font-bold text-purple-200">
-                            {selectedBoxIds.length} Cajas Seleccionadas
-                        </span>
+            {/* Search Bar & Selection Toolbar */}
+            <div className="mb-6 space-y-4">
+                {/* Search Input */}
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-xl leading-5 bg-[#1A1D29] text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-[#242938] focus:border-purple-500 focus:ring-1 focus:ring-purple-500 sm:text-sm transition-colors"
+                        placeholder="Buscar cajas por nombre o ubicación..."
+                        value={boxSearchTerm}
+                        onChange={(e) => setBoxSearchTerm(e.target.value)}
+                    />
+                </div>
+
+                {selectedBoxIds.length > 0 && (
+                    <div className="bg-purple-600/10 border border-purple-500/20 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-3">
+                            <span className="font-bold text-purple-200">
+                                {selectedBoxIds.length} Cajas Seleccionadas
+                            </span>
+                            <button
+                                onClick={() => setSelectedBoxIds([])}
+                                className="text-sm text-purple-400 hover:text-white underline"
+                            >
+                                Limpiar
+                            </button>
+                        </div>
                         <button
-                            onClick={() => setSelectedBoxIds([])}
-                            className="text-sm text-purple-400 hover:text-white underline"
+                            onClick={handleBulkPrint}
+                            className="btn bg-purple-500 text-white font-bold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 hover:bg-purple-400"
                         >
-                            Limpiar
+                            <Printer size={18} />
+                            Imprimir {selectedBoxIds.length} Etiquetas
                         </button>
                     </div>
-                    <button
-                        onClick={handleBulkPrint}
-                        className="btn bg-purple-500 text-white font-bold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 hover:bg-purple-400"
-                    >
-                        <Printer size={18} />
-                        Imprimir {selectedBoxIds.length} Etiquetas
-                    </button>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
@@ -174,56 +199,62 @@ export const BoxList = () => {
                         </button>
                     </div>
                 ) : (
-                    boxes.map(box => (
-                        <div
-                            key={box.id}
-                            className={`group bg-[#242938] border rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col h-full relative overflow-hidden ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
-                        >
-                            {/* Selection Checkbox */}
-                            <div className="absolute top-4 left-4 z-20">
-                                <label className="custom-checkbox flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="w-5 h-5 rounded border-gray-600 bg-[#1A1D29] text-purple-500 focus:ring-purple-500"
-                                        checked={selectedBoxIds.includes(box.id)}
-                                        onChange={() => toggleSelection(box.id)}
-                                    />
-                                </label>
-                            </div>
-
-                            <div className="flex justify-between items-start mb-4 relative z-10 pl-8">
-                                <div className="min-w-0 pr-2">
-                                    <h3 className="font-bold text-white text-xl truncate group-hover:text-purple-400 transition-colors">{box.name}</h3>
-                                    <p className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">
-                                        <MapPin size={14} className="text-gray-500" />
-                                        {box.location}
-                                    </p>
-                                </div>
-                                <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
-                                    <QRCodeCanvas value={box.qrCode} size={48} />
-                                </div>
-                            </div>
-
-                            <div className="mt-auto grid grid-cols-[1fr_auto] gap-3">
-                                <Link
-                                    to={`/boxes/${box.id}`}
-                                    className="bg-[#1A1D29] hover:bg-gray-800 text-gray-300 hover:text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center"
-                                >
-                                    Ver Contenido
-                                </Link>
-                                <button
-                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
-                                    onClick={() => deleteBox(box.id)}
-                                    title="Eliminar caja"
-                                >
-                                    <Plus size={20} className="rotate-45" />
-                                </button>
-                            </div>
-
-                            {/* Decorative background accent */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-600/10 transition-colors pointer-events-none"></div>
+                    filteredBoxes.length === 0 ? (
+                        <div className="col-span-full py-20 text-center text-gray-500">
+                            No se encontraron cajas que coincidan con tu búsqueda.
                         </div>
-                    ))
+                    ) : (
+                        filteredBoxes.map(box => (
+                            <div
+                                key={box.id}
+                                className={`group bg-[#242938] border rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col h-full relative overflow-hidden ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
+                            >
+                                {/* Selection Checkbox */}
+                                <div className="absolute top-4 left-4 z-20">
+                                    <label className="custom-checkbox flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5 rounded border-gray-600 bg-[#1A1D29] text-purple-500 focus:ring-purple-500"
+                                            checked={selectedBoxIds.includes(box.id)}
+                                            onChange={() => toggleSelection(box.id)}
+                                        />
+                                    </label>
+                                </div>
+
+                                <div className="flex justify-between items-start mb-4 relative z-10 pl-8">
+                                    <div className="min-w-0 pr-2">
+                                        <h3 className="font-bold text-white text-xl truncate group-hover:text-purple-400 transition-colors">{box.name}</h3>
+                                        <p className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">
+                                            <MapPin size={14} className="text-gray-500" />
+                                            {box.location}
+                                        </p>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+                                        <QRCodeCanvas value={box.qrCode} size={48} />
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto grid grid-cols-[1fr_auto] gap-3">
+                                    <Link
+                                        to={`/boxes/${box.id}`}
+                                        className="bg-[#1A1D29] hover:bg-gray-800 text-gray-300 hover:text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center"
+                                    >
+                                        Ver Contenido
+                                    </Link>
+                                    <button
+                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                        onClick={() => deleteBox(box.id)}
+                                        title="Eliminar caja"
+                                    >
+                                        <Plus size={20} className="rotate-45" />
+                                    </button>
+                                </div>
+
+                                {/* Decorative background accent */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-600/10 transition-colors pointer-events-none"></div>
+                            </div>
+                        ))
+                    )
                 )}
             </div>
         </div>
