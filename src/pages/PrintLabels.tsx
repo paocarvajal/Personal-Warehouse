@@ -27,7 +27,7 @@ export const PrintLabels = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white text-black p-0 m-0">
+        <div className="min-h-screen print:min-h-0 bg-white text-black p-0 m-0">
             {/* No-Print UI Controls */}
             <div className="print:hidden fixed top-0 left-0 right-0 bg-gray-900 p-4 shadow-xl z-50 flex justify-between items-center text-white">
                 <div className="flex items-center gap-4">
@@ -50,7 +50,7 @@ export const PrintLabels = () => {
             <div className="print:hidden h-20"></div>
 
             {/* Printable Grid */}
-            <div className="print-grid p-8 gap-4 mx-auto max-w-[21cm]">
+            <div className="print-grid p-8 print:p-0 gap-4 mx-auto max-w-[21cm]">
                 <style>{`
                     .print-grid {
                         display: grid;
@@ -77,14 +77,19 @@ export const PrintLabels = () => {
                             margin: 1cm;
                             size: auto;
                         }
+                        html, body {
+                            height: auto !important;
+                            min-height: 0 !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            background: white;
+                        }
                         .print-grid {
                             gap: 0.2cm;
                         }
                         .label-card {
                             border: 1px solid #ddd; /* Lighter border for actual print */
-                        }
-                        body {
-                            background: white;
+                            break-inside: avoid;
                         }
                     }
                 `}</style>
