@@ -12,7 +12,7 @@ import {
     PlusCircle,
     ArrowLeft
 } from 'lucide-react';
-import type { Category } from '../types';
+
 
 // Updated Categories with Icons and Colors (Hardcoded for now as requested)
 const CATEGORY_CONFIG: Record<string, { icon: string, color: string, label: string }> = {

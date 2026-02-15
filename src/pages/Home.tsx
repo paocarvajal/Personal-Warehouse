@@ -9,7 +9,6 @@ import {
     ScanLine,
     TrendingUp,
     Bell,
-    Package,
     LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -33,8 +32,6 @@ export const Home = () => {
             return acc + (value * quantity);
         }, 0);
     }, [items]);
-
-    const recentItems = [...items].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 5);
 
     // User Name Logic
     const [userName, setUserName] = useState(localStorage.getItem('warehouse_user_name') || user?.displayName?.split(' ')[0] || 'Paola');
