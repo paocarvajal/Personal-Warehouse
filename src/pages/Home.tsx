@@ -183,13 +183,13 @@ export const Home = () => {
 
                     {/* Analytics / Inventory List */}
                     <button
-                        onClick={() => navigate('/inventory')}
+                        onClick={() => navigate('/explorer')}
                         className="glass-panel glass-card-hover p-4 rounded-xl flex flex-col items-center justify-center gap-3 h-32 group transition-all duration-300"
                     >
                         <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors border border-white/5 group-hover:border-amber-500/50">
                             <BarChart2 size={24} className="text-amber-400" />
                         </div>
-                        <span className="text-sm font-medium text-slate-300">Todo</span>
+                        <span className="text-sm font-medium text-slate-300">Explorar</span>
                     </button>
                 </div>
 
@@ -208,55 +208,16 @@ export const Home = () => {
                 </div>
             </section>
 
-            {/* RECENT ACTIVITY */}
+            {/* RECENT ACTIVITY - HIDDEN per user request for cleaner look */}
+            {/* 
             <section>
                 <div className="flex justify-between items-end mb-4">
                     <h3 className="text-lg font-bold text-white">Actividad Reciente</h3>
                     <button onClick={() => navigate('/inventory')} className="text-[var(--accent-purple)] text-xs font-semibold hover:text-purple-400 transition-colors">Ver Todo</button>
                 </div>
-
-                <div className="space-y-3">
-                    {recentItems.length === 0 ? (
-                        <div className="glass-panel p-6 text-center rounded-xl border-dashed border-slate-700">
-                            <p className="text-gray-500 text-sm">No hay ítems recientes.</p>
-                        </div>
-                    ) : (
-                        recentItems.map(item => (
-                            <div
-                                key={item.id}
-                                onClick={() => navigate(`/edit/${item.id}`)}
-                                className="glass-panel p-4 rounded-xl flex items-center gap-4 group cursor-pointer hover:bg-white/5 transition-colors"
-                            >
-                                <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/10 flex items-center justify-center bg-slate-800">
-                                    {item.imageUrl ? (
-                                        <img
-                                            src={item.imageUrl}
-                                            alt={item.name}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                    ) : (
-                                        <Package className="text-slate-500" size={24} />
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-white font-semibold truncate text-base">{item.name}</h4>
-                                    <p className="text-slate-400 text-xs mt-1">
-                                        {item.category || 'Sin categoría'}
-                                    </p>
-                                </div>
-                                <div className="flex-shrink-0">
-                                    <span className={`px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap flex items-center gap-1 ${item.boxId ? 'bg-[var(--accent-purple-light)] text-[var(--accent-purple)] border-[var(--accent-purple)]/20' : 'bg-slate-700/50 text-slate-300 border-slate-600/50'
-                                        }`}>
-                                        {item.boxId ? <Box size={10} /> : null}
-                                        {item.boxId ? 'En Caja' : 'Suelto'}
-                                    </span>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </section>
-
+                ... (hidden)
+            </section> 
+            */}
         </div>
     );
 };

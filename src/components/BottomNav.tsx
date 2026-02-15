@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, Box, ScanLine } from 'lucide-react';
+import { Home, Folder, Box, ScanLine } from 'lucide-react';
 
 
 const BottomNav: React.FC = () => {
@@ -9,7 +9,7 @@ const BottomNav: React.FC = () => {
 
     const navItems = [
         { icon: Home, label: 'Inicio', path: '/' },
-        { icon: Package, label: 'Items', path: '/inventory' },
+        { icon: Folder, label: 'Explorar', path: '/explorer' },
         { icon: ScanLine, label: 'Scan', path: '/scan' },
         { icon: Box, label: 'Cajas', path: '/boxes' },
     ];

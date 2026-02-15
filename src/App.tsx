@@ -13,6 +13,7 @@ import { BoxDetails } from './pages/BoxDetails';
 import { PrintLabels } from './pages/PrintLabels';
 import { Scan } from './pages/Scan';
 import { BulkImport } from './pages/BulkImport';
+import { Explorer } from './pages/Explorer';
 import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
 
@@ -61,6 +62,7 @@ function App() {
               <Route path="print-labels" element={<PrintLabels />} />
               <Route path="scan" element={<Scan />} />
               <Route path="import" element={<BulkImport />} />
+              <Route path="explorer" element={<Explorer />} />
             </Route>
           </Routes>
         </Router>
