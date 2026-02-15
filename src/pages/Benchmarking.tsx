@@ -17,6 +17,8 @@ export const Benchmarking = () => {
     // New Item Form State
     const [newItemName, setNewItemName] = useState('');
     const [newItemImage, setNewItemImage] = useState('');
+    const [newItemPrice, setNewItemPrice] = useState('');
+    const [newItemSpecs, setNewItemSpecs] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [inputType, setInputType] = useState<'url' | 'file'>('url');
     const [status, setStatus] = useState<'idle' | 'uploading' | 'saving'>('idle');
@@ -72,7 +74,9 @@ export const Benchmarking = () => {
                 addBenchmark({
                     name: newItemName,
                     imageUrl: finalImageUrl,
-                    options: []
+                    options: [],
+                    targetPrice: newItemPrice ? parseFloat(newItemPrice) : undefined,
+                    specs: newItemSpecs.split(',').map(s => s.trim()).filter(s => s)
                 }),
                 new Promise(r => setTimeout(() => r("slow"), 5000))
             ]);
@@ -84,6 +88,8 @@ export const Benchmarking = () => {
             // Reset and close
             setNewItemName('');
             setNewItemImage('');
+            setNewItemPrice('');
+            setNewItemSpecs('');
             setImageFile(null);
             setIsCreating(false);
         } catch (error) {
@@ -206,6 +212,32 @@ export const Benchmarking = () => {
                                     value={newItemName}
                                     onChange={e => setNewItemName(e.target.value)}
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 uppercase mb-2">Precio Objetivo</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-4 text-gray-500">$</span>
+                                        <input
+                                            type="number"
+                                            className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl pl-8 p-4 text-white outline-none focus:border-purple-500 transition-all placeholder-gray-600"
+                                            placeholder="0.00"
+                                            value={newItemPrice}
+                                            onChange={e => setNewItemPrice(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 uppercase mb-2">Specs (Separa con comas)</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-purple-500 transition-all placeholder-gray-600"
+                                        placeholder="144Hz, 4K, IPS..."
+                                        value={newItemSpecs}
+                                        onChange={e => setNewItemSpecs(e.target.value)}
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -353,9 +385,10 @@ export const Benchmarking = () => {
                                                 <span className="text-sm font-medium">Click para agregar imagen</span>
                                             </div>
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1A1D29] via-[#1A1D29]/80 to-transparent p-6 pt-12 pointer-events-none">
-                                            <h2 className="text-2xl font-bold text-white leading-tight shadow-black drop-shadow-sm">{selectedItem.name}</h2>
-                                        </div>
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1A1D29] via-[#1A1D29]/80 to-transparent p-6 pt-12 pointer-events-none opacity-0"></div>
+                                    </div>
+                                    <div className="p-4 bg-[#242938] border-t border-gray-700">
+                                        <h2 className="text-xl font-bold text-white leading-tight">{selectedItem.name}</h2>
                                     </div>
                                     <div className="p-3 bg-[#2d3241] border-t border-gray-700 flex justify-end">
                                         <button
@@ -373,6 +406,84 @@ export const Benchmarking = () => {
                                     </div>
                                 </div>
 
+                                {/* SPECS & TARGET CARD */}
+                                <div className="bg-[#242938] p-6 rounded-2xl border border-gray-700 shadow-md space-y-4">
+                                    <h3 className="text-sm font-bold text-gray-400 uppercase flex items-center gap-2 border-b border-gray-700 pb-2">
+                                        <TrendingUp size={16} /> Objetivo & Specs
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        {/* Target Price */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-xs text-gray-500 font-bold block">PRECIO META</label>
+                                                {selectedItem.targetPrice && bestPrice(selectedItem) !== null && (
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${(bestPrice(selectedItem) || 0) <= selectedItem.targetPrice
+                                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                                        : 'bg-red-500/20 text-red-400'
+                                                        }`}>
+                                                        {(bestPrice(selectedItem) || 0) <= selectedItem.targetPrice ? 'Logrado' : 'Excede'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-2.5 text-gray-500 text-sm">$</span>
+                                                <input
+                                                    key={selectedItem.id}
+                                                    type="number"
+                                                    className="w-full bg-[#1A1D29] border border-gray-600 rounded-lg pl-6 p-2 text-white text-sm focus:border-purple-500 outline-none transition-colors"
+                                                    placeholder="--.--"
+                                                    defaultValue={selectedItem.targetPrice || ''}
+                                                    onBlur={(e) => {
+                                                        const val = parseFloat(e.target.value);
+                                                        // If empty, remove it? For now assume valid updates.
+                                                        if (!isNaN(val)) updateBenchmark(selectedItem.id, { targetPrice: val });
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Specs */}
+                                        <div>
+                                            <label className="text-xs text-gray-500 font-bold mb-2 block">ESPECIFICACIONES</label>
+                                            <div className="flex flex-wrap gap-2 mb-2">
+                                                {(selectedItem.specs || []).map((spec, i) => (
+                                                    <span key={i} className="bg-purple-500/10 text-purple-300 px-2 py-1 rounded-md text-xs border border-purple-500/20 flex items-center gap-1 group/spec animate-in fade-in zoom-in">
+                                                        {spec}
+                                                        <button
+                                                            onClick={async () => {
+                                                                const newSpecs = (selectedItem.specs || []).filter((_, idx) => idx !== i);
+                                                                await updateBenchmark(selectedItem.id, { specs: newSpecs });
+                                                            }}
+                                                            className="hover:text-white hover:bg-white/10 rounded-full p-0.5 transition-colors"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <input
+                                                type="text"
+                                                className="w-full bg-[#1A1D29] border border-gray-600 rounded-lg p-2 text-white text-xs focus:border-purple-500 outline-none placeholder-gray-600 transition-colors"
+                                                placeholder="+ Agregar spec (Enter)"
+                                                onKeyDown={async (e) => {
+                                                    if (e.key === 'Enter') {
+                                                        const val = e.currentTarget.value.trim();
+                                                        if (val) {
+                                                            const current = selectedItem.specs || [];
+                                                            if (!current.includes(val)) {
+                                                                await updateBenchmark(selectedItem.id, { specs: [...current, val] });
+                                                            }
+                                                            e.currentTarget.value = '';
+                                                        }
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* ADD FORM */}
                                 <div className="bg-[#242938] p-6 rounded-2xl border border-purple-500/30 shadow-[0_0_30px_rgba(108,99,255,0.1)]">
                                     <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2 pb-4 border-b border-gray-700">
@@ -384,11 +495,11 @@ export const Benchmarking = () => {
 
                                     <form onSubmit={handleAddOption} className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tienda</label>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tienda / Opción</label>
                                             <input
                                                 type="text"
                                                 className="w-full bg-[#1A1D29] border border-gray-600 rounded-lg p-3 text-white focus:border-purple-500 outline-none placeholder-gray-600 transition-colors"
-                                                placeholder="Ej: Amazon"
+                                                placeholder="Ej: Amazon - Modelo X"
                                                 value={optStoreName}
                                                 onChange={e => setOptStoreName(e.target.value)}
                                             />
@@ -604,12 +715,22 @@ export const Benchmarking = () => {
                                             <div className="p-5">
                                                 <h3 className="font-bold text-lg mb-2 truncate text-gray-200 group-hover:text-purple-400 transition-colors">{bm.name}</h3>
                                                 {best !== null ? (
-                                                    <div className="flex items-center gap-2 bg-emerald-500/10 w-fit px-3 py-1 rounded-lg border border-emerald-500/20">
-                                                        <span className="text-[10px] uppercase font-bold text-emerald-500/70">Mejor:</span>
-                                                        <span className="text-emerald-400 font-mono font-bold text-lg tracking-tight">${best.toLocaleString()}</span>
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-2 bg-emerald-500/10 w-fit px-3 py-1 rounded-lg border border-emerald-500/20">
+                                                            <span className="text-[10px] uppercase font-bold text-emerald-500/70">Mejor:</span>
+                                                            <span className="text-emerald-400 font-mono font-bold text-lg tracking-tight">${best.toLocaleString()}</span>
+                                                        </div>
+                                                        {bm.targetPrice && (
+                                                            <div className="text-[10px] text-gray-500 font-medium flex gap-1">
+                                                                Meta: <span className={best <= bm.targetPrice ? "text-emerald-400" : "text-red-400"}>${bm.targetPrice.toLocaleString()}</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
-                                                    <div className="text-gray-500 text-xs font-medium italic py-1.5 px-1">Sin precios registrados</div>
+                                                    <div className="space-y-1">
+                                                        <div className="text-gray-500 text-xs font-medium italic py-1.5 px-1">Sin precios registrados</div>
+                                                        {bm.targetPrice && <div className="text-[10px] text-gray-500">Meta: ${bm.targetPrice}</div>}
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>

@@ -16,6 +16,8 @@ export interface BenchmarkItem {
   imageUrl?: string;
   category?: Category;
   options: BenchmarkOption[];
+  targetPrice?: number;
+  specs?: string[];
   createdAt: number;
 }
 
