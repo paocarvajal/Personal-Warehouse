@@ -30,6 +30,15 @@ export const Benchmarking = () => {
     const [optType, setOptType] = useState<'online' | 'physical'>('online');
     const [optUrl, setOptUrl] = useState('');
 
+    // Persisted Title State
+    const [pageTitle, setPageTitle] = useState(localStorage.getItem('warehouse_benchmark_title') || 'Cotizaciones');
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newTitle = e.target.value;
+        setPageTitle(newTitle);
+        localStorage.setItem('warehouse_benchmark_title', newTitle);
+    };
+
     const handleCreateItem = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newItemName.trim()) return;
@@ -160,7 +169,13 @@ export const Benchmarking = () => {
                         <div className="p-3 bg-orange-500/10 rounded-xl text-orange-500">
                             <TrendingUp size={32} />
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Ardilla Enloquecida</h1>
+                        <input
+                            type="text"
+                            value={pageTitle}
+                            onChange={handleTitleChange}
+                            className="text-3xl md:text-4xl font-bold text-white tracking-tight bg-transparent border-none outline-none placeholder-gray-600 w-full"
+                            placeholder="Título Personalizado"
+                        />
                     </div>
                     <p className="text-gray-400 text-lg">El almacén de tus mejores hallazgos.</p>
                 </div>
