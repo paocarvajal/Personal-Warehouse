@@ -390,18 +390,16 @@ export const BoxList = () => {
                                 onLayoutChange={onLayoutChange}
                                 onDragStart={() => { isDraggingRef.current = true; }}
                                 onDragStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 200); }}
-                                isDraggable={true}
-                                isResizable={false}
+                                draggableCancel=".no-drag"
+                                {...{ isDraggable: true, isResizable: false } as any}
                             >
                                 {boxes.map(box => (
                                     <div
                                         key={box.id}
-                                        // On mouse up check if it was a drag or click?
-                                        // The internal link handles click. Drag prevents click usually.
                                         className={`group bg-[#242938] border rounded-2xl p-5 flex flex-col h-full relative overflow-hidden cursor-grab active:cursor-grabbing ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
                                     >
                                         {/* Selection Checkbox */}
-                                        <div className="absolute top-4 left-4 z-20" onMouseDown={e => e.stopPropagation()}>
+                                        <div className="absolute top-4 left-4 z-20 no-drag" onMouseDown={e => e.stopPropagation()}>
                                             <label className="custom-checkbox flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
@@ -425,7 +423,7 @@ export const BoxList = () => {
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto grid grid-cols-[1fr_auto] gap-3" onMouseDown={e => e.stopPropagation()}>
+                                        <div className="mt-auto grid grid-cols-[1fr_auto] gap-3 no-drag" onMouseDown={e => e.stopPropagation()}>
                                             <div onClick={(e) => {
                                                 if (isDraggingRef.current) { e.preventDefault(); return; }
                                                 navigate(`/boxes/${box.id}`);
