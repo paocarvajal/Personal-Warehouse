@@ -72,6 +72,7 @@ export const Explorer = () => {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const containerWidth = useContainerWidth(containerRef);
+    const isDraggingRef = useRef(false); // Track if a drag is occurring
 
     const setActiveCategory = (cat: string | null) => {
         if (cat) {
@@ -194,7 +195,15 @@ export const Explorer = () => {
         return (
             <div
                 key={cat}
-                onClick={() => setActiveCategory(cat)} // Note: RGL might trigger click on drag stop, usually handled by checking drag distance but basic onClick is usually fine if we don't drag.
+                onClick={(e) => {
+                    // Prevent navigation if a drag just happened
+                    if (isDraggingRef.current) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
+                    setActiveCategory(cat);
+                }}
                 // We add 'cursor-grab' explicitly
                 className="glass-panel p-4 rounded-xl cursor-grab active:cursor-grabbing hover:bg-white/5 transition-colors flex flex-col gap-3 group h-full select-none"
             >
@@ -274,6 +283,8 @@ export const Explorer = () => {
                             margin={[16, 16]}
                             width={containerWidth} // Pass manual width
                             onLayoutChange={onLayoutChange}
+                            onDragStart={() => { isDraggingRef.current = true; }}
+                            onDragStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 200); }}
                         >
                             {availableCategoriesRaw.map(cat => (
                                 <div key={cat as string}>
