@@ -112,7 +112,7 @@ export const Explorer = () => {
                             </div>
                         )}
                         <h1 className="text-2xl font-bold text-white">
-                            {activeCategory ? (CATEGORY_CONFIG[activeCategory]?.label || activeCategory) : 'Explorador'}
+                            {activeCategory ? (CATEGORY_CONFIG[activeCategory]?.label || activeCategory) : 'Mis Categorías'}
                         </h1>
                     </div>
 

@@ -186,7 +186,7 @@ export const Home = () => {
                         <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors border border-white/5 group-hover:border-amber-500/50">
                             <BarChart2 size={24} className="text-amber-400" />
                         </div>
-                        <span className="text-sm font-medium text-slate-300">Explorar</span>
+                        <span className="text-sm font-medium text-slate-300">Mis Cosas</span>
                     </button>
                 </div>
 
