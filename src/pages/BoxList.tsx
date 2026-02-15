@@ -1,8 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { Box as BoxIcon, Plus, MapPin, Printer } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Link, useNavigate } from 'react-router-dom';
+
+// @ts-ignore
+import { Responsive } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+// Custom hook to get width (since WidthProvider import is flaky)
+const useContainerWidth = (ref: React.RefObject<HTMLDivElement | null>) => {
+    const [width, setWidth] = useState(1200);
+
+    useEffect(() => {
+        if (!ref.current) return;
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setWidth(entry.contentRect.width);
+            }
+        });
+
+        resizeObserver.observe(ref.current);
+        setWidth(ref.current.offsetWidth); // Initial
+
+        return () => resizeObserver.disconnect();
+    }, [ref]);
+
+    return width;
+};
 
 export const BoxList = () => {
     const { boxes, addBox, deleteBox } = useInventory();
@@ -12,11 +39,102 @@ export const BoxList = () => {
     const [selectedBoxIds, setSelectedBoxIds] = useState<string[]>([]);
     const [boxSearchTerm, setBoxSearchTerm] = useState('');
 
+    // Drag and Drop Refs
+    const containerRef = useRef<HTMLDivElement>(null);
+    const containerWidth = useContainerWidth(containerRef);
+    const isDraggingRef = useRef(false);
+
     const filteredBoxes = boxes.filter(box =>
         box.name.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
         box.location.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
         (box.category && box.category.toLowerCase().includes(boxSearchTerm.toLowerCase()))
     );
+
+    // --- LAYOUT LOGIC ---
+    const getSavedLayout = () => {
+        try {
+            const saved = localStorage.getItem('box_layout');
+            return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const savedLayouts = getSavedLayout();
+
+    const generateLayouts = (items: { id: string }[]) => {
+        return items.map((item, i) => ({
+            i: item.id,
+            x: i % 4,
+            y: Math.floor(i / 4),
+            w: 1,
+            h: 1
+        }));
+    };
+
+    // Merge saved layout with current boxes (handle new/deleted boxes)
+    const currentLayoutVariables = (() => {
+        const layoutMap = new Map((savedLayouts?.lg || generateLayouts(boxes)).map((l: any) => [l.i, l]));
+        let maxY = 0;
+        if (savedLayouts?.lg) {
+            savedLayouts.lg.forEach((l: any) => {
+                if (l.y >= maxY) maxY = l.y + 1;
+            });
+        }
+
+        const finalLayout: any[] = [];
+        boxes.forEach((box, index) => {
+            if (layoutMap.has(box.id)) {
+                finalLayout.push(layoutMap.get(box.id));
+            } else {
+                finalLayout.push({
+                    i: box.id,
+                    x: (finalLayout.length % 4),
+                    y: maxY + Math.floor(index / 4),
+                    w: 1,
+                    h: 1
+                });
+            }
+        });
+        return finalLayout;
+    })();
+
+    const [layouts, setLayouts] = useState({ lg: currentLayoutVariables, md: currentLayoutVariables, sm: currentLayoutVariables });
+
+    // Sync layouts when boxes change (e.g. added new box)
+    useEffect(() => {
+        const newLayout = (() => {
+            const layoutMap = new Map(layouts.lg.map((l: any) => [l.i, l]));
+            let maxY = 0;
+            layouts.lg.forEach((l: any) => {
+                if (l.y >= maxY) maxY = l.y + 1;
+            });
+
+            const finalLayout: any[] = [];
+            boxes.forEach((box) => {
+                if (layoutMap.has(box.id)) {
+                    finalLayout.push(layoutMap.get(box.id));
+                } else {
+                    finalLayout.push({
+                        i: box.id,
+                        x: (finalLayout.length % 4),
+                        y: maxY + 1, // Add to bottom
+                        w: 1,
+                        h: 1
+                    });
+                }
+            });
+            return finalLayout;
+        })();
+
+        setLayouts({ lg: newLayout, md: newLayout, sm: newLayout });
+    }, [boxes.length]); // Only re-calc on length diff to avoid loops
+
+
+    const onLayoutChange = (_layout: any, allLayouts: any) => {
+        setLayouts(allLayouts);
+        localStorage.setItem('box_layout', JSON.stringify(allLayouts));
+    };
 
     // Categories for selection (same as Explorer)
     const PREDEFINED_CATEGORIES = [
@@ -183,9 +301,9 @@ export const BoxList = () => {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
+            <div ref={containerRef} className="pb-20">
                 {boxes.length === 0 && !isCreating ? (
-                    <div className="col-span-full py-20 flex flex-col items-center justify-center text-center text-gray-500 bg-[#242938] rounded-3xl border border-dashed border-gray-700">
+                    <div className="py-20 flex flex-col items-center justify-center text-center text-gray-500 bg-[#242938] rounded-3xl border border-dashed border-gray-700">
                         <div className="w-24 h-24 bg-[#1A1D29] rounded-full flex items-center justify-center mb-6">
                             <BoxIcon size={40} className="opacity-50" />
                         </div>
@@ -200,60 +318,137 @@ export const BoxList = () => {
                     </div>
                 ) : (
                     filteredBoxes.length === 0 ? (
-                        <div className="col-span-full py-20 text-center text-gray-500">
+                        <div className="py-20 text-center text-gray-500">
                             No se encontraron cajas que coincidan con tu búsqueda.
                         </div>
                     ) : (
-                        filteredBoxes.map(box => (
-                            <div
-                                key={box.id}
-                                className={`group bg-[#242938] border rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col h-full relative overflow-hidden ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
-                            >
-                                {/* Selection Checkbox */}
-                                <div className="absolute top-4 left-4 z-20">
-                                    <label className="custom-checkbox flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            className="w-5 h-5 rounded border-gray-600 bg-[#1A1D29] text-purple-500 focus:ring-purple-500"
-                                            checked={selectedBoxIds.includes(box.id)}
-                                            onChange={() => toggleSelection(box.id)}
-                                        />
-                                    </label>
-                                </div>
+                        // If searching, show updated filtered items in grid (Search breaks manual layout usually, but we can fallback or try to keep positions)
+                        // For simplicity in search mode, users often just want results. 
+                        // But if they want to REORDER, they probably aren't searching. 
+                        // Let's show Grid Layout ONLY when NOT searching strictly? 
+                        // Or we can just filter the keys passed to ResponsiveGridLayout.
 
-                                <div className="flex justify-between items-start mb-4 relative z-10 pl-8">
-                                    <div className="min-w-0 pr-2">
-                                        <h3 className="font-bold text-white text-xl truncate group-hover:text-purple-400 transition-colors">{box.name}</h3>
-                                        <p className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">
-                                            <MapPin size={14} className="text-gray-500" />
-                                            {box.location}
-                                        </p>
-                                    </div>
-                                    <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
-                                        <QRCodeCanvas value={box.qrCode} size={48} />
-                                    </div>
-                                </div>
-
-                                <div className="mt-auto grid grid-cols-[1fr_auto] gap-3">
-                                    <Link
-                                        to={`/boxes/${box.id}`}
-                                        className="bg-[#1A1D29] hover:bg-gray-800 text-gray-300 hover:text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center"
+                        boxSearchTerm ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filteredBoxes.map(box => (
+                                    <div
+                                        key={box.id}
+                                        className={`group bg-[#242938] border rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col h-full relative overflow-hidden ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
                                     >
-                                        Ver Contenido
-                                    </Link>
-                                    <button
-                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
-                                        onClick={() => deleteBox(box.id)}
-                                        title="Eliminar caja"
-                                    >
-                                        <Plus size={20} className="rotate-45" />
-                                    </button>
-                                </div>
+                                        <div className="absolute top-4 left-4 z-20">
+                                            <label className="custom-checkbox flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-5 h-5 rounded border-gray-600 bg-[#1A1D29] text-purple-500 focus:ring-purple-500"
+                                                    checked={selectedBoxIds.includes(box.id)}
+                                                    onChange={() => toggleSelection(box.id)}
+                                                />
+                                            </label>
+                                        </div>
 
-                                {/* Decorative background accent */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-600/10 transition-colors pointer-events-none"></div>
+                                        <div className="flex justify-between items-start mb-4 relative z-10 pl-8">
+                                            <div className="min-w-0 pr-2">
+                                                <h3 className="font-bold text-white text-xl truncate group-hover:text-purple-400 transition-colors">{box.name}</h3>
+                                                <p className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">
+                                                    <MapPin size={14} className="text-gray-500" />
+                                                    {box.location}
+                                                </p>
+                                            </div>
+                                            <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+                                                <QRCodeCanvas value={box.qrCode} size={48} />
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto grid grid-cols-[1fr_auto] gap-3">
+                                            <Link
+                                                to={`/boxes/${box.id}`}
+                                                className="bg-[#1A1D29] hover:bg-gray-800 text-gray-300 hover:text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center"
+                                            >
+                                                Ver Contenido
+                                            </Link>
+                                            <button
+                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                                onClick={() => deleteBox(box.id)}
+                                                title="Eliminar caja"
+                                            >
+                                                <Plus size={20} className="rotate-45" />
+                                            </button>
+                                        </div>
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-600/10 transition-colors pointer-events-none"></div>
+                                    </div>
+                                ))}
                             </div>
-                        ))
+                        ) : (
+                            <Responsive
+                                className="layout"
+                                layouts={layouts}
+                                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                                cols={{ lg: 4, md: 3, sm: 2, xs: 1, xxs: 1 }}
+                                rowHeight={180}
+                                margin={[24, 24]}
+                                width={containerWidth}
+                                onLayoutChange={onLayoutChange}
+                                onDragStart={() => { isDraggingRef.current = true; }}
+                                onDragStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 200); }}
+                                isDraggable={true}
+                                isResizable={false}
+                            >
+                                {boxes.map(box => (
+                                    <div
+                                        key={box.id}
+                                        // On mouse up check if it was a drag or click?
+                                        // The internal link handles click. Drag prevents click usually.
+                                        className={`group bg-[#242938] border rounded-2xl p-5 flex flex-col h-full relative overflow-hidden cursor-grab active:cursor-grabbing ${selectedBoxIds.includes(box.id) ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-700 hover:border-purple-500/50'}`}
+                                    >
+                                        {/* Selection Checkbox */}
+                                        <div className="absolute top-4 left-4 z-20" onMouseDown={e => e.stopPropagation()}>
+                                            <label className="custom-checkbox flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-5 h-5 rounded border-gray-600 bg-[#1A1D29] text-purple-500 focus:ring-purple-500"
+                                                    checked={selectedBoxIds.includes(box.id)}
+                                                    onChange={() => toggleSelection(box.id)}
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <div className="flex justify-between items-start mb-4 relative z-10 pl-8 pointer-events-none">
+                                            <div className="min-w-0 pr-2">
+                                                <h3 className="font-bold text-white text-xl truncate group-hover:text-purple-400 transition-colors">{box.name}</h3>
+                                                <p className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">
+                                                    <MapPin size={14} className="text-gray-500" />
+                                                    {box.location}
+                                                </p>
+                                            </div>
+                                            <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+                                                <QRCodeCanvas value={box.qrCode} size={48} />
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto grid grid-cols-[1fr_auto] gap-3" onMouseDown={e => e.stopPropagation()}>
+                                            <div onClick={(e) => {
+                                                if (isDraggingRef.current) { e.preventDefault(); return; }
+                                                navigate(`/boxes/${box.id}`);
+                                            }}
+                                                className="bg-[#1A1D29] hover:bg-gray-800 text-gray-300 hover:text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-center text-sm flex items-center justify-center cursor-pointer"
+                                            >
+                                                Ver Contenido
+                                            </div>
+                                            <button
+                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                                onClick={() => deleteBox(box.id)}
+                                                title="Eliminar caja"
+                                            >
+                                                <Plus size={20} className="rotate-45" />
+                                            </button>
+                                        </div>
+
+                                        {/* Decorative background accent */}
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-600/10 transition-colors pointer-events-none"></div>
+                                    </div>
+                                ))}
+                            </Responsive>
+                        )
                     )
                 )}
             </div>
