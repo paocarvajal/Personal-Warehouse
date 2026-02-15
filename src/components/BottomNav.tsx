@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Folder, Box, ScanLine } from 'lucide-react';
+import { Home, Folder, Box, ScanLine, TrendingUp, PlusSquare } from 'lucide-react';
 
 
 const BottomNav: React.FC = () => {
@@ -9,13 +9,15 @@ const BottomNav: React.FC = () => {
 
     const navItems = [
         { icon: Home, label: 'Inicio', path: '/' },
-        { icon: Folder, label: 'Mis Cosas', path: '/explorer' },
-        { icon: ScanLine, label: 'Scan', path: '/scan' },
+        { icon: Folder, label: 'Cosas', path: '/explorer' },
         { icon: Box, label: 'Cajas', path: '/boxes' },
+        { icon: TrendingUp, label: 'Bench', path: '/benchmarking' },
+        { icon: PlusSquare, label: 'Add', path: '/add' },
+        { icon: ScanLine, label: 'Scan', path: '/scan' },
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-white/10 flex justify-around items-center px-6 py-4 lg:hidden rounded-t-2xl backdrop-blur-xl bg-slate-900/80">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-white/10 flex justify-around items-center px-2 py-3 lg:hidden rounded-t-2xl backdrop-blur-xl bg-slate-900/80">
             {navItems.map((item) => (
                 <button
                     key={item.path}
