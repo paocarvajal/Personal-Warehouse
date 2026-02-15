@@ -54,10 +54,20 @@ export const Explorer = () => {
     // --- LOGIC ---
 
     // 1. Get List of Categories from actual Items + Default Config
+    // EXCLUDE categories that are actually Box Names assigned to another category
+    // e.g. If Box "Tijeras" has category "Herramientas", then "Tijeras" should NOT appear as a main category here.
+    const hiddenCategories = new Set(
+        boxes
+            .filter(b => b.category && b.category.trim() !== '')
+            .map(b => b.name)
+    );
+
     const availableCategories = Array.from(new Set([
         ...Object.keys(CATEGORY_CONFIG),
         ...items.map(i => i.category)
-    ])).filter(Boolean);
+    ]))
+        .filter(Boolean)
+        .filter(cat => !hiddenCategories.has(cat as string));
 
     // 3. Find Boxes that belong to this Category
     // This looks for:
