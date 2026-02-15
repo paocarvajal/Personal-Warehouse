@@ -1,12 +1,12 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, Box as BoxIcon, Printer, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Box as BoxIcon, Printer, X, Trash2, Edit2, Save } from 'lucide-react';
 
 export const BoxDetails = () => {
     const { id } = useParams<{ id: string }>();
-    const { boxes, getBoxContents, items, updateItem, deleteBox } = useInventory();
+    const { boxes, getBoxContents, items, updateItem, deleteBox, updateBox } = useInventory();
     const navigate = useNavigate();
 
     const [itemsToMove, setItemsToMove] = useState<string[]>([]);
@@ -14,11 +14,43 @@ export const BoxDetails = () => {
     const [moveSearchTerm, setMoveSearchTerm] = useState('');
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
+    // Create local editable state
+    const [isEditing, setIsEditing] = useState(false);
     const box = boxes.find(b => b.id === id);
-    const contents = id ? getBoxContents(id) : [];
+    const [editForm, setEditForm] = useState({ name: '', location: '', description: '', category: '' });
 
-    // Items that are NOT in this box already
-    const availableItems = items.filter(i => i.boxId !== id);
+    // Categories for selection
+    const PREDEFINED_CATEGORIES = [
+        'Ropa', 'Herramientas', 'Medicina', 'Hogar', 'Electrónica',
+        'Papelería', 'Juguetes', 'Varios', 'Carpintería', 'Plomería',
+        'Electricidad', 'Jardinería', 'Pintura', 'Automotriz'
+    ];
+
+    useEffect(() => {
+        if (box) {
+            setEditForm({
+                name: box.name,
+                location: box.location,
+                description: box.description || '',
+                category: box.category || ''
+            });
+        }
+    }, [box]);
+
+    const handleSaveBox = () => {
+        if (!box) return;
+        if (updateBox) {
+            updateBox(box.id, editForm);
+            setIsEditing(false);
+        } else {
+            console.error('UpdateBox missing');
+        }
+    };
+
+    const handleBack = () => {
+        // If there is state from where we came, we can check it, but currently navigate(-1) works well with the new URL params explorer
+        navigate(-1);
+    };
 
     const toggleItemToMove = (itemId: string) => {
         setItemsToMove(prev =>
@@ -35,6 +67,11 @@ export const BoxDetails = () => {
         setIsAddModalOpen(false);
         setMoveSearchTerm('');
     };
+
+    const contents = id ? getBoxContents(id) : [];
+
+    // Items that are NOT in this box already
+    const availableItems = items.filter(i => i.boxId !== id);
 
     const filteredAvailableItems = availableItems.filter(item =>
         item.name.toLowerCase().includes(moveSearchTerm.toLowerCase()) ||
@@ -64,7 +101,7 @@ export const BoxDetails = () => {
             <html>
                 <head>
                     <title>Etiqueta ${box.name}</title>
-                       <style>
+                        <style>
                         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
                         .qr-container { border: 2px solid black; padding: 20px; text-align: center; border-radius: 10px; }
                         img { width: 200px; height: 200px; display: block; margin: 0 auto 10px; }
@@ -110,52 +147,127 @@ export const BoxDetails = () => {
             {/* Header */}
             <div className="flex items-start gap-6 bg-[#242938] p-6 rounded-3xl border border-gray-700 shadow-xl relative overflow-hidden">
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={handleBack}
                     className="mt-1 p-2 hover:bg-white/5 rounded-full transition-colors text-gray-400 hover:text-white"
                 >
                     <ArrowLeft size={24} />
                 </button>
                 <div className="flex-1 relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider">
-                            <BoxIcon size={12} /> Contenedor
-                        </div>
-                        {box.category && (
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider">
-                                📌 {box.category}
+                    {isEditing ? (
+                        <div className="space-y-4 max-w-lg bg-black/20 p-4 rounded-xl border border-white/10">
+                            <div>
+                                <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Nombre</label>
+                                <input
+                                    className="w-full bg-[#1A1D29] border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-purple-500 outline-none"
+                                    value={editForm.name}
+                                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                />
                             </div>
-                        )}
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{box.name}</h1>
-                    <p className="text-gray-400 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        {box.location}
-                    </p>
+                            <div>
+                                <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Ubicación</label>
+                                <input
+                                    className="w-full bg-[#1A1D29] border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-purple-500 outline-none"
+                                    value={editForm.location}
+                                    onChange={e => setEditForm({ ...editForm, location: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Descripción</label>
+                                <input
+                                    className="w-full bg-[#1A1D29] border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-purple-500 outline-none"
+                                    value={editForm.description}
+                                    onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Categoría</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {PREDEFINED_CATEGORIES.map(cat => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setEditForm({ ...editForm, category: editForm.category === cat ? '' : cat })}
+                                            className={`text-xs px-2 py-1 rounded-md border transition-all ${editForm.category === cat
+                                                ? 'bg-purple-600 text-white border-purple-500'
+                                                : 'bg-[#1A1D29] text-gray-400 border-gray-700 hover:border-gray-500'
+                                                }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    onClick={handleSaveBox}
+                                    className="btn bg-[var(--accent-purple)] hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+                                >
+                                    <Save size={16} /> Guardar
+                                </button>
+                                <button
+                                    onClick={() => setIsEditing(false)}
+                                    className="btn bg-transparent border border-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-white/5"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider">
+                                    <BoxIcon size={12} /> Contenedor
+                                </div>
+                                {box.category && (
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider">
+                                        📌 {box.category}
+                                    </div>
+                                )}
+                            </div>
+                            <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{box.name}</h1>
+                            <p className="text-gray-400 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                {box.location}
+                            </p>
+                            {box.description && (
+                                <p className="text-gray-500 text-sm mt-2">{box.description}</p>
+                            )}
+                        </>
+                    )}
                 </div>
                 <div className="flex flex-col items-center gap-3 relative z-10">
                     <div id="qr-code-container" className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm transform hover:scale-105 transition-transform">
                         <QRCodeCanvas value={box.qrCode} size={100} />
                     </div>
-                    <button
-                        onClick={handlePrint}
-                        className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition-colors font-medium"
-                    >
-                        <Printer size={14} /> Imprimir Etiqueta
-                    </button>
-                    <button
-                        onClick={async () => {
-                            if (confirm('¿Estás seguro de eliminar esta caja? Los artículos quedarán "sueltos".')) {
-                                for (const item of contents) {
-                                    await updateItem(item.id, { boxId: null });
-                                }
-                                await deleteBox(box.id);
-                                navigate('/boxes');
-                            }
-                        }}
-                        className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors font-medium mt-1"
-                    >
-                        <Trash2 size={14} /> Eliminar Caja
-                    </button>
+                    {!isEditing && (
+                        <>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors font-medium mt-1"
+                            >
+                                <Edit2 size={14} /> Editar
+                            </button>
+                            <button
+                                onClick={handlePrint}
+                                className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition-colors font-medium"
+                            >
+                                <Printer size={14} /> Imprimir Etiqueta
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (confirm('¿Estás seguro de eliminar esta caja? Los artículos quedarán "sueltos".')) {
+                                        for (const item of contents) {
+                                            await updateItem(item.id, { boxId: null });
+                                        }
+                                        await deleteBox(box.id);
+                                        navigate('/boxes');
+                                    }
+                                }}
+                                className="text-xs flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors font-medium mt-1"
+                            >
+                                <Trash2 size={14} /> Eliminar Caja
+                            </button>
+                        </>
+                    )}
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>

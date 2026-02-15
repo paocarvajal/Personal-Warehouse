@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, PlusSquare, Box, ScanLine, TrendingUp, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { Home, Package, PlusSquare, Box, ScanLine, TrendingUp, ChevronLeft, ChevronRight, LogOut, Folder } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarItemProps {
@@ -40,9 +40,9 @@ const Sidebar: React.FC = () => {
 
     const menuItems = [
         { icon: Home, label: 'Inicio', path: '/' },
-        { icon: TrendingUp, label: 'Benchmarking', path: '/benchmarking' },
-        { icon: Package, label: 'Inventario', path: '/inventory' },
+        { icon: Folder, label: 'Mis Cosas', path: '/explorer' },
         { icon: Box, label: 'Cajas', path: '/boxes' },
+        { icon: TrendingUp, label: 'Benchmarking', path: '/benchmarking' },
         { icon: PlusSquare, label: 'Agregar', path: '/add' },
         { icon: ScanLine, label: 'Escanear', path: '/scan' },
     ];

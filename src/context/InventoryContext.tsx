@@ -23,6 +23,7 @@ interface InventoryContextType {
     updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
     deleteItem: (id: string) => Promise<void>;
     addBox: (box: Omit<Box, 'id' | 'createdAt' | 'qrCode'>) => Promise<void>;
+    updateBox: (id: string, updates: Partial<Box>) => Promise<void>;
     deleteBox: (id: string) => Promise<void>;
     addBenchmark: (bm: Omit<BenchmarkItem, 'id' | 'createdAt'>) => Promise<void>;
     updateBenchmark: (id: string, updates: Partial<BenchmarkItem>) => Promise<void>;
@@ -187,9 +188,9 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const deleteBenchmark = async (id: string) => {
-        try { 
+        try {
             if (!user) throw new Error("User not authenticated");
-            await deleteDoc(doc(db, 'users', user.uid, 'benchmarks', id)); 
+            await deleteDoc(doc(db, 'users', user.uid, 'benchmarks', id));
         }
         catch (e) { console.error("Error deleting benchmark: ", e); throw e; }
     };
@@ -231,13 +232,28 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const updateBox = async (id: string, updates: Partial<Box>) => {
+        try {
+            if (!user) throw new Error("User not authenticated");
+            const boxRef = doc(db, 'users', user.uid, 'boxes', id);
+            // Remove undefined fields
+            const cleanUpdates = Object.fromEntries(
+                Object.entries(updates).filter(([_, v]) => v !== undefined)
+            );
+            await updateDoc(boxRef, cleanUpdates);
+        } catch (e) {
+            console.error("Error updating box: ", e);
+            throw e;
+        }
+    };
+
     const getBoxContents = (boxId: string) => {
         return items.filter(item => item.boxId === boxId);
     };
 
     return (
         <InventoryContext.Provider value={{
-            items, boxes, benchmarks, addItem, updateItem, deleteItem, addBox, deleteBox,
+            items, boxes, benchmarks, addItem, updateItem, deleteItem, addBox, deleteBox, updateBox,
             addBenchmark, updateBenchmark, deleteBenchmark,
             getBoxContents, loading, error
         }}>

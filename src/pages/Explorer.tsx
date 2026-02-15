@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInventory } from '../context/InventoryContext';
 import {
     Search,
@@ -35,9 +35,21 @@ const CATEGORY_CONFIG: Record<string, { icon: string, color: string, label: stri
 export const Explorer = () => {
     const { items, boxes } = useInventory();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Get active category from URL or null
+    const activeCategory = searchParams.get('category');
+
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const setActiveCategory = (cat: string | null) => {
+        if (cat) {
+            setSearchParams({ category: cat });
+        } else {
+            setSearchParams({});
+        }
+    };
 
     // --- LOGIC ---
 
@@ -46,11 +58,6 @@ export const Explorer = () => {
         ...Object.keys(CATEGORY_CONFIG),
         ...items.map(i => i.category)
     ])).filter(Boolean);
-
-    // 2. Filter Content based on Active Category
-    const filteredItems = activeCategory
-        ? items.filter(i => i.category === activeCategory)
-        : items;
 
     // 3. Find Boxes that belong to this Category
     // This looks for:
@@ -66,6 +73,29 @@ export const Explorer = () => {
             return boxItems.some(i => i.category === activeCategory);
         })
         : boxes;
+
+    // 4. Identify IDs of boxes shown in this view
+    // We use this to filter OUT items that are already inside these boxes
+    // const visibleBoxIds = new Set(boxesInThisCategory.map(b => b.id));
+
+    // 2. Filter Content based on Active Category
+    // AND Exclude items that are already in the visible boxes (to avoid duplication/clutter)
+    const filteredItems = activeCategory
+        ? items.filter(i => {
+            const matchesCategory = i.category === activeCategory;
+            // Show if it matches category AND (is not in a box OR is in a box that isn't shown here?)
+            // User requested: "These items are already at the Pinzas Box... clean up"
+            // So, if an item is in a box, and that box is displayed above, HIDE the item from the list below.
+            // Only show "Sueltos" (no box) OR items in boxes that somehow didn't make it to the list (rare edge case).
+            const isLoose = !i.boxId;
+
+            // Allow showing boxed items if the box itself isn't categorized correctly? 
+            // No, simplified logic: If we show boxes, we assume the user looks there.
+            // The list below is for "Loose Items" in this Category.
+            return matchesCategory && isLoose;
+        })
+        : items;
+
 
     // Search Filtering
     const displayedItems = filteredItems.filter(i =>

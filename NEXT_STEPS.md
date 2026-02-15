@@ -2,16 +2,19 @@
 
 ¡Felicidades! La aplicación está funcional y desplegada.
 
-## ✅ Funcionalidades Completadas
-*   **Gestión de Cajas:** Crear, editar y eliminar cajas con ubicación física.
+## ✅ Funcionalidades Completadas v1.1
+*   **Gestión de Cajas:** Crear, editar y **eliminar** cajas con ubicación física.
 *   **Códigos QR:** Generación automática e impresión masiva de etiquetas (5x5cm).
 *   **Escáner:** Escaneo de QRs con cámara (Tablet/Móvil) y búsqueda manual por nombre.
 *   **Gestión de Ítems:**
-    *   Subida de fotos.
-    *   **Identidad Única:** SKU auto-generado (ej. `CAR-123456`) para evitar duplicados.
-    *   Clasificación por categorías (con opción de categorías personalizadas).
-    *   Movimiento de ítems entre cajas.
-*   **Visualización:** Agrupación por categorías dentro de las cajas y zoom de imágenes.
+    *   **Importación Masiva:** Carga desde Excel (copiar/pegar) con soporte para unidades.
+    *   **Unidades de Medida:** Selección dinámica (pza, kg, ml, etc.) según categoría.
+    *   **Identidad Única:** SKU auto-generado.
+    *   **Eliminación Masiva:** Borrado de múltiples ítems a la vez.
+*   **Visualización e Inventario:**
+    *   **Filtros Dinámicos:** Multiselección de categorías autodetectadas.
+    *   **Buscador Global:** Encontrado en la sección de inventario.
+    *   **Personalización:** Saludo de usuario editable.
 
 ## 🔮 Futuras Mejoras (Ideas)
 Si deseas continuar expandiendo el sistema en el futuro, aquí hay algunas ideas:
