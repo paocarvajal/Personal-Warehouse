@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInventory } from '../context/InventoryContext';
 import {
@@ -9,10 +9,35 @@ import {
     Package as ItemIcon,
     Grid,
     List,
-    PlusCircle,
     ArrowLeft
 } from 'lucide-react';
 
+// @ts-ignore
+import { Responsive } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+// Custom hook to get width (since WidthProvider import is flaky)
+const useContainerWidth = (ref: React.RefObject<HTMLDivElement | null>) => {
+    const [width, setWidth] = useState(1200);
+
+    useEffect(() => {
+        if (!ref.current) return;
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setWidth(entry.contentRect.width);
+            }
+        });
+
+        resizeObserver.observe(ref.current);
+        setWidth(ref.current.offsetWidth); // Initial
+
+        return () => resizeObserver.disconnect();
+    }, [ref]);
+
+    return width;
+};
 
 // Updated Categories with Icons and Colors (Hardcoded for now as requested)
 const CATEGORY_CONFIG: Record<string, { icon: string, color: string, label: string }> = {
@@ -32,6 +57,8 @@ const CATEGORY_CONFIG: Record<string, { icon: string, color: string, label: stri
     'Automotriz': { icon: '🚗', color: 'bg-red-600', label: 'Automotriz' },
 };
 
+// ... (keep default export but inside component)
+
 export const Explorer = () => {
     const { items, boxes } = useInventory();
     const navigate = useNavigate();
@@ -43,6 +70,9 @@ export const Explorer = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchQuery, setSearchQuery] = useState('');
 
+    const containerRef = useRef<HTMLDivElement>(null);
+    const containerWidth = useContainerWidth(containerRef);
+
     const setActiveCategory = (cat: string | null) => {
         if (cat) {
             setSearchParams({ category: cat });
@@ -53,59 +83,99 @@ export const Explorer = () => {
 
     // --- LOGIC ---
 
-    // 1. Get List of Categories from actual Items + Default Config
-    // EXCLUDE categories that are actually Box Names assigned to another category
-    // e.g. If Box "Tijeras" has category "Herramientas", then "Tijeras" should NOT appear as a main category here.
     const hiddenCategories = new Set(
         boxes
             .filter(b => b.category && b.category.trim() !== '')
             .map(b => b.name)
     );
 
-    const availableCategories = Array.from(new Set([
+    const availableCategoriesRaw = Array.from(new Set([
         ...Object.keys(CATEGORY_CONFIG),
         ...items.map(i => i.category)
     ]))
         .filter(Boolean)
         .filter(cat => !hiddenCategories.has(cat as string));
 
+    // --- DRAG & DROP STATE ---
+
+    // Load saved order from localStorage if available
+    const getSavedLayout = () => {
+        try {
+            const saved = localStorage.getItem('category_layout');
+            return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const savedLayouts = getSavedLayout();
+
+    // Generate initial layout if no saved data (or for new items)
+    const generateLayouts = (categories: unknown[]) => {
+        return categories.map((cat, i) => ({
+            i: cat as string,
+            x: i % 2, // 2 cols for mobile default default
+            y: Math.floor(i / 2),
+            w: 1,
+            h: 1
+        }));
+    };
+
+    const initialLayout = savedLayouts?.lg || generateLayouts(availableCategoriesRaw);
+
+    // Merge: If new categories appeared that aren't in saved layout, add them to end
+    const currentLayoutVariables = (() => {
+        const layoutMap = new Map((savedLayouts?.lg || initialLayout).map((l: any) => [l.i, l]));
+        let maxY = 0;
+        (savedLayouts?.lg || initialLayout).forEach((l: any) => {
+            if (l.y >= maxY) maxY = l.y + 1;
+        });
+
+        const finalLayout: any[] = [];
+
+        // Add existing ones in order
+        availableCategoriesRaw.forEach((cat, index) => {
+            if (layoutMap.has(cat)) {
+                finalLayout.push(layoutMap.get(cat));
+            } else {
+                // Append new category
+                finalLayout.push({
+                    i: cat as string,
+                    x: (finalLayout.length % 2),
+                    y: maxY + Math.floor(index / 2), // Simplistic append
+                    w: 1,
+                    h: 1
+                });
+            }
+        });
+        return finalLayout;
+    })();
+
+    const [layouts, setLayouts] = useState({ lg: currentLayoutVariables, md: currentLayoutVariables, sm: currentLayoutVariables });
+
+    const onLayoutChange = (_layout: any, allLayouts: any) => {
+        setLayouts(allLayouts);
+        localStorage.setItem('category_layout', JSON.stringify(allLayouts));
+    };
+
+    // ... (rest of logic: filteredItems, displayedItems...)
+
     // 3. Find Boxes that belong to this Category
-    // This looks for:
-    // A) Boxes EXPLICITLY assigned to this category
-    // B) Boxes containing ITEMS of this category
     const boxesInThisCategory = activeCategory
         ? boxes.filter(box => {
-            // Check direct assignment
             if (box.category === activeCategory) return true;
-
-            // Check content inference
             const boxItems = items.filter(i => i.boxId === box.id);
             return boxItems.some(i => i.category === activeCategory);
         })
         : boxes;
 
-    // 4. Identify IDs of boxes shown in this view
-    // We use this to filter OUT items that are already inside these boxes
-    // const visibleBoxIds = new Set(boxesInThisCategory.map(b => b.id));
-
-    // 2. Filter Content based on Active Category
-    // AND Exclude items that are already in the visible boxes (to avoid duplication/clutter)
     const filteredItems = activeCategory
         ? items.filter(i => {
             const matchesCategory = i.category === activeCategory;
-            // Show if it matches category AND (is not in a box OR is in a box that isn't shown here?)
-            // User requested: "These items are already at the Pinzas Box... clean up"
-            // So, if an item is in a box, and that box is displayed above, HIDE the item from the list below.
-            // Only show "Sueltos" (no box) OR items in boxes that somehow didn't make it to the list (rare edge case).
             const isLoose = !i.boxId;
-
-            // Allow showing boxed items if the box itself isn't categorized correctly? 
-            // No, simplified logic: If we show boxes, we assume the user looks there.
-            // The list below is for "Loose Items" in this Category.
             return matchesCategory && isLoose;
         })
         : items;
-
 
     // Search Filtering
     const displayedItems = filteredItems.filter(i =>
@@ -119,14 +189,14 @@ export const Explorer = () => {
 
     const renderCategoryCard = (cat: string) => {
         const config = CATEGORY_CONFIG[cat] || { icon: '📁', color: 'bg-slate-600', label: cat };
-        // Count items in this category
         const count = items.filter(i => i.category === cat).length;
 
         return (
             <div
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className="glass-panel p-4 rounded-xl cursor-pointer hover:bg-white/5 transition-all hover:scale-[1.02] flex flex-col gap-3 group"
+                onClick={() => setActiveCategory(cat)} // Note: RGL might trigger click on drag stop, usually handled by checking drag distance but basic onClick is usually fine if we don't drag.
+                // We add 'cursor-grab' explicitly
+                className="glass-panel p-4 rounded-xl cursor-grab active:cursor-grabbing hover:bg-white/5 transition-colors flex flex-col gap-3 group h-full select-none"
             >
                 <div className={`w-12 h-12 rounded-lg ${config.color}/20 flex items-center justify-center text-2xl border border-white/5 group-hover:border-${config.color.split('-')[1]}-500/50 transition-colors`}>
                     {config.icon}
@@ -162,7 +232,6 @@ export const Explorer = () => {
                         </h1>
                     </div>
 
-                    {/* View Toggle (Only in Category View) */}
                     {activeCategory && (
                         <div className="flex bg-slate-800 rounded-lg p-1">
                             <button
@@ -181,7 +250,6 @@ export const Explorer = () => {
                     )}
                 </div>
 
-                {/* SEARCH BAR */}
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
@@ -195,16 +263,24 @@ export const Explorer = () => {
             </div>
 
             <div className="p-6">
-                {/* LEVEL 1: CATEGORY GRID */}
                 {!activeCategory ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {availableCategories.map(cat => renderCategoryCard(cat as string))}
-
-                        {/* New Category Placeholder */}
-                        <div className="glass-panel p-4 rounded-xl border-dashed border-slate-700 flex flex-col items-center justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
-                            <PlusCircle size={32} className="text-slate-500" />
-                            <span className="text-xs font-medium text-slate-500">Nueva Categoría</span>
-                        </div>
+                    <div ref={containerRef}>
+                        <Responsive
+                            className="layout"
+                            layouts={layouts}
+                            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                            cols={{ lg: 4, md: 3, sm: 2, xs: 1, xxs: 1 }}
+                            rowHeight={120}
+                            margin={[16, 16]}
+                            width={containerWidth} // Pass manual width
+                            onLayoutChange={onLayoutChange}
+                        >
+                            {availableCategoriesRaw.map(cat => (
+                                <div key={cat as string}>
+                                    {renderCategoryCard(cat as string)}
+                                </div>
+                            ))}
+                        </Responsive>
                     </div>
                 ) : (
                     /* LEVEL 2: INSIDE A CATEGORY */
