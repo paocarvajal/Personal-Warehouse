@@ -48,7 +48,7 @@ export const Home = () => {
         <div className="animate-in fade-in duration-500 pb-24">
 
             {/* HEADER */}
-            <header className="sticky top-0 z-30 pt-4 pb-4 px-1 glass-panel border-b-0 border-white/5 rounded-2xl mb-6">
+            <header className="pt-4 pb-4 px-1 glass-panel border-b-0 border-white/5 rounded-2xl mb-6">
                 <div className="flex justify-between items-center px-4">
                     <div className="flex items-center gap-4">
                         <div className="relative group cursor-pointer">
