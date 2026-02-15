@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
 import { useInventory } from '../context/InventoryContext';
-import { AlertTriangle, Package, Search, QrCode, Camera } from 'lucide-react';
+import { AlertTriangle, Package, Search, QrCode } from 'lucide-react';
 
 export const Scan = () => {
     const navigate = useNavigate();
@@ -66,7 +66,7 @@ export const Scan = () => {
                     { facingMode: "environment" }, // Prefer back camera
                     config,
                     (decodedText) => handleScanSuccess(decodedText),
-                    (errorMessage) => {
+                    () => {
                         // Ignore frame read errors, they are common while moving camera
                     }
                 );
@@ -83,9 +83,18 @@ export const Scan = () => {
 
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.stop()
-                    .then(() => scannerRef.current?.clear())
-                    .catch(e => console.error("Failed to stop scanner", e));
+                try {
+                    scannerRef.current.stop()
+                        .then(() => scannerRef.current?.clear())
+                        .catch(err => {
+                            // Ignore "not running" errors as they are expected during fast unmounts
+                            if (!err?.message?.includes("not running")) {
+                                console.error("Failed to stop scanner", err);
+                            }
+                        });
+                } catch (e) {
+                    // Fail silently for safety
+                }
                 scannerRef.current = null;
             }
         };

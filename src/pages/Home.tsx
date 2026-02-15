@@ -9,13 +9,14 @@ import {
     ScanLine,
     TrendingUp,
     Bell,
-    Package
+    Package,
+    LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Home = () => {
     const { items, boxes } = useInventory();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
 
     // Data Calculations
@@ -74,10 +75,21 @@ export const Home = () => {
                             />
                         </div>
                     </div>
-                    <button className="relative p-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-white transition-colors border border-white/10">
-                        <Bell size={20} />
-                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-[var(--accent-purple)] rounded-full border border-slate-900 shadow-[0_0_8px_rgba(185,13,242,0.8)]"></span>
-                    </button>
+                    <div className="flex gap-2">
+                        {/* Notification Bell (Visual only for now) */}
+                        <button className="relative p-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-white transition-colors border border-white/10">
+                            <Bell size={20} />
+                            <span className="absolute top-2 right-2.5 w-2 h-2 bg-[var(--accent-purple)] rounded-full border border-slate-900 shadow-[0_0_8px_rgba(185,13,242,0.8)]"></span>
+                        </button>
+                        {/* Logout Button */}
+                        <button
+                            onClick={() => logout()}
+                            className="p-2.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors border border-red-500/20"
+                            title="Cerrar Sesión"
+                        >
+                            <LogOut size={20} />
+                        </button>
+                    </div>
                 </div>
             </header>
 
