@@ -25,6 +25,7 @@ export const AddItem = () => {
         description: '',
         boxId: searchParams.get('boxId') || '',
         tags: '',
+        estimatedValue: '',
     });
 
     const generateSKU = (category: string) => {
@@ -111,6 +112,7 @@ export const AddItem = () => {
                 boxId: formData.boxId || null,
                 tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
                 imageUrl: imageUrl || null,
+                estimatedValue: Number(formData.estimatedValue) || 0,
             });
             navigate(-1); // Go back to the previous page
         } catch (error) {
@@ -226,6 +228,17 @@ export const AddItem = () => {
                                 placeholder="Ej: herramienta, eléctrico, batería"
                                 value={formData.tags}
                                 onChange={e => setFormData({ ...formData, tags: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-400 font-bold text-sm uppercase mb-2">Valor Estimado ($)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="w-full bg-[#1A1D29] border border-gray-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none transition-all placeholder-gray-600"
+                                placeholder="0.00"
+                                value={formData.estimatedValue}
+                                onChange={e => setFormData({ ...formData, estimatedValue: e.target.value })}
                             />
                         </div>
                     </div>

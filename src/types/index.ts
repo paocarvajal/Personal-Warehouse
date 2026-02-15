@@ -49,6 +49,7 @@ export interface Item {
   imageUrl?: string | null; // Data URL or external URL
   tags: string[];
   benchmarks?: Benchmark[];
+  estimatedValue?: number; // Added for Total Value calculation
   createdAt: number;
   updatedAt: number;
 }

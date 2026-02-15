@@ -5,14 +5,14 @@
 /* VARIABLES CSS */
 /* ============================================ */
 :root {
-  /* Fondos */
-  --bg-primary: #1A1D29;
-  --bg-secondary: #242938;
-  --bg-tertiary: #2d3241;
+  /* Fondos - New Premium Dark Theme */
+  --bg-primary: #0f172a;   /* Slate 900 */
+  --bg-secondary: #1e293b; /* Slate 800 */
+  --bg-tertiary: #334155;  /* Slate 700 */
 
   /* Acentos */
-  --accent-purple: #6C63FF;
-  --accent-purple-light: rgba(108, 99, 255, 0.15);
+  --accent-purple: #b90df2; /* Vivid Purple from Design */
+  --accent-purple-light: rgba(185, 13, 242, 0.15);
   --accent-teal: #4ECDC4;
   --accent-teal-light: rgba(78, 205, 196, 0.12);
 
@@ -209,4 +209,33 @@ html {
 
 .hide-desktop {
   @apply block lg:hidden;
+}
+
+/* ============================================ */
+/* NEW STITCH UTILITIES */
+/* ============================================ */
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.glass-card-hover:active, .glass-card-hover:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-color: rgba(185, 13, 242, 0.3);
+}
+
+.bg-gradient-page {
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(to right, #b90df2, #10b981);
 }

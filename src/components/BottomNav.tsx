@@ -2,33 +2,6 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Package, Box, ScanLine } from 'lucide-react';
 
-interface NavItemProps {
-    icon: React.ElementType;
-    label: string;
-    path: string;
-    isActive: boolean;
-    onClick: () => void;
-}
-
-const NavItem: React.FC<NavItemProps> = ({
-    icon: Icon,
-    label,
-    isActive,
-    onClick
-}) => {
-    return (
-        <button
-            onClick={onClick}
-            className={`nav-item flex-1 max-w-[100px] py-2 px-2 text-center flex flex-col items-center justify-center ${isActive ? 'active' : ''
-                }`}
-        >
-            <Icon size={24} className={`mb-1 ${isActive ? 'text-[var(--accent-purple)]' : 'text-gray-400'}`} />
-            <span className={`text-[10px] font-semibold ${isActive ? 'text-[var(--accent-purple)]' : 'text-gray-400'}`}>
-                {label}
-            </span>
-        </button>
-    );
-};
 
 const BottomNav: React.FC = () => {
     const navigate = useNavigate();
@@ -42,16 +15,22 @@ const BottomNav: React.FC = () => {
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-secondary)] border-t border-white/5 flex justify-around items-center px-4 pt-2 pb-6 lg:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-white/10 flex justify-around items-center px-6 py-4 lg:hidden rounded-t-2xl backdrop-blur-xl bg-slate-900/80">
             {navItems.map((item) => (
-                <NavItem
+                <button
                     key={item.path}
-                    icon={item.icon}
-                    label={item.label}
-                    path={item.path}
-                    isActive={location.pathname === item.path}
                     onClick={() => navigate(item.path)}
-                />
+                    className={`nav-item flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 ${location.pathname === item.path ? 'text-[var(--accent-purple)] scale-110' : 'text-slate-500 hover:text-slate-300'
+                        }`}
+                >
+                    <item.icon size={24} className={`mb-0.5 ${location.pathname === item.path ? 'fill-[var(--accent-purple)]/20' : ''}`} />
+                    <span className="text-[10px] font-medium">
+                        {item.label}
+                    </span>
+                    {location.pathname === item.path && (
+                        <span className="absolute -bottom-2 w-1 h-1 bg-[var(--accent-purple)] rounded-full shadow-[0_0_8px_var(--accent-purple)]"></span>
+                    )}
+                </button>
             ))}
         </nav>
     );
