@@ -251,7 +251,10 @@ export const Explorer = () => {
                             </div>
                         )}
                         <h1 className="text-2xl font-bold text-white">
-                            {activeCategory ? (CATEGORY_CONFIG[activeCategory]?.label || activeCategory) : 'Mis Categorías'}
+                            {activeCategory
+                                ? (CATEGORY_CONFIG[activeCategory]?.label || activeCategory)
+                                : (searchQuery ? `Resultados: "${searchQuery}"` : 'Mis Categorías')
+                            }
                         </h1>
                     </div>
 
@@ -286,7 +289,7 @@ export const Explorer = () => {
             </div>
 
             <div className="p-6">
-                {!activeCategory ? (
+                {!activeCategory && !searchQuery ? (
                     <div ref={containerRef}>
                         <Responsive
                             className="layout"

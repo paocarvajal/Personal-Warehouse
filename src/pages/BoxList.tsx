@@ -32,7 +32,7 @@ const useContainerWidth = (ref: React.RefObject<HTMLDivElement | null>) => {
 };
 
 export const BoxList = () => {
-    const { boxes, addBox, deleteBox } = useInventory();
+    const { boxes, addBox, deleteBox, items } = useInventory();
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
     const [newBoxData, setNewBoxData] = useState({ name: '', location: '', description: '', category: '' });
@@ -44,11 +44,23 @@ export const BoxList = () => {
     const containerWidth = useContainerWidth(containerRef);
     const isDraggingRef = useRef(false);
 
-    const filteredBoxes = boxes.filter(box =>
-        box.name.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
-        box.location.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
-        (box.category && box.category.toLowerCase().includes(boxSearchTerm.toLowerCase()))
-    );
+    const filteredBoxes = boxes.filter(box => {
+        // 1. Check Box Metadata
+        const matchesBox = box.name.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
+            box.location.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
+            (box.category && box.category.toLowerCase().includes(boxSearchTerm.toLowerCase()));
+
+        if (matchesBox) return true;
+
+        // 2. Check Items inside the Box
+        const boxItems = items.filter(item => item.boxId === box.id);
+        const matchesItem = boxItems.some(item =>
+            item.name.toLowerCase().includes(boxSearchTerm.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(boxSearchTerm.toLowerCase()))
+        );
+
+        return matchesItem;
+    });
 
     // --- LAYOUT LOGIC ---
     const getSavedLayout = () => {
